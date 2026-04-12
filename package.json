@@ -22,21 +22,10 @@
     "build": "tsc",
     "postbuild": "node -e \"const fs=require('fs');const f='dist/cli.js';const c=fs.readFileSync(f,'utf8');if(!c.startsWith('#!/usr/bin/env node')){fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)}\"",
     "bundle": "esbuild src/cli.ts --bundle --platform=node --target=node18 --outfile=dist/bundle.js --external:crypto --external:fs --external:path --external:child_process --external:os --external:readline && node -e \"const fs=require('fs');const f='dist/bundle.js';const c=fs.readFileSync(f,'utf8');if(!c.startsWith('#!/usr/bin/env node')){fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)}\"",
-    "compile": "npm run bundle && pkg dist/bundle.js --targets node18-linux-x64,node18-macos-arm64,node18-macos-x64,node18-win-x64 --output dist/todo --compress GZip",
     "test": "vitest run",
-    "dev": "ts-node src/cli.ts",
     "check": "tsc --noEmit",
-    "lint": "eslint src/"
-  },
-  "pkg": {
-    "assets": [],
-    "targets": [
-      "node18-linux-x64",
-      "node18-macos-arm64",
-      "node18-macos-x64",
-      "node18-win-x64"
-    ],
-    "outputPath": "dist"
+    "lint": "biome check src/",
+    "lint:fix": "biome check src/ --write"
   },
   "type": "commonjs",
   "keywords": [
@@ -50,13 +39,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
     "@types/node": "^25.6.0",
-    "@typescript-eslint/eslint-plugin": "^8.58.1",
-    "@typescript-eslint/parser": "^8.58.1",
-    "@yao-pkg/pkg": "^6.14.2",
     "esbuild": "^0.28.0",
-    "eslint": "^9.39.4",
-    "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
     "vitest": "^3.0.0"
   },
