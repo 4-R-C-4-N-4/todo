@@ -7,7 +7,7 @@
     "todo": "./dist/cli.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "files": [
     "dist/",
@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc",
     "postbuild": "node -e \"const fs=require('fs');const f='dist/cli.js';const c=fs.readFileSync(f,'utf8');if(!c.startsWith('#!/usr/bin/env node')){fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)}\"",
-    "bundle": "esbuild src/cli.ts --bundle --platform=node --target=node18 --outfile=dist/bundle.js --external:crypto --external:fs --external:path --external:child_process --external:os --external:readline && node -e \"const fs=require('fs');const f='dist/bundle.js';const c=fs.readFileSync(f,'utf8');if(!c.startsWith('#!/usr/bin/env node')){fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)}\"",
+    "bundle": "esbuild src/cli.ts --bundle --platform=node --target=node22 --outfile=dist/bundle.js --external:crypto --external:fs --external:path --external:child_process --external:os --external:readline && node -e \"const fs=require('fs');const f='dist/bundle.js';const c=fs.readFileSync(f,'utf8');if(!c.startsWith('#!/usr/bin/env node')){fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)}\"",
     "test": "vitest run",
     "check": "tsc --noEmit",
     "lint": "biome check src/",
