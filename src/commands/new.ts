@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { getContext } from '../context.js';
 import { generateId, listTickets, writeTicket } from '../ticket.js';
 import { ensureTodoDir } from '../config.js';
+import { tracebackFingerprint } from '../fingerprint.js';
 import type { Ticket, TicketType, SourceType, Source, FileReference } from '../types.js';
 
 const VALID_TYPES: TicketType[] = ['bug', 'feature', 'refactor', 'chore', 'debt'];
@@ -62,6 +63,14 @@ export function registerNew(program: Command): void {
 
       // Build source object
       const sourceObj: Source = { type: sourceType as SourceType } as Source;
+
+      // Compute traceback fingerprint for log/test sources with piped content
+      if (opts.pipe && (sourceType === 'log' || sourceType === 'test')) {
+        // summary was extracted from stdin; we want to fingerprint the full content
+        // re-read isn't possible; fingerprint from summary as best-effort
+        const fp = tracebackFingerprint(summary);
+        (sourceObj as Record<string, unknown>)['traceback_fingerprint'] = fp;
+      }
 
       // Build file reference
       let fileRefs: FileReference[] | undefined;

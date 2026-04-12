@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import { getContext } from '../context.js';
-import { readTicketByPrefix, writeTicket, NotFoundError, AmbiguousIdError } from '../ticket.js';
+import { readTicketByPrefix, writeTicket } from '../ticket.js';
 import { validateTransition, applyTransition } from '../state.js';
+import { handleError } from '../errors.js';
 import type { State } from '../types.js';
 
 const VALID_STATES: State[] = ['open', 'active', 'blocked', 'done', 'wontfix', 'duplicate'];
@@ -58,14 +59,7 @@ export function registerTransition(program: Command): void {
         console.log(`Transitioned ${updated.id}: ${fromState} → ${state}`);
 
       } catch (err) {
-        if (err instanceof NotFoundError) {
-          console.error(`Error: ticket '${id}' not found`);
-          process.exit(2);
-        } else if (err instanceof AmbiguousIdError) {
-          console.error(`Error: ambiguous id '${id}': ${(err as AmbiguousIdError).matches.join(', ')}`);
-          process.exit(2);
-        }
-        throw err;
+        handleError(err);
       }
     });
 }

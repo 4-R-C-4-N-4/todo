@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { getContext } from '../context.js';
-import { readTicketByPrefix, NotFoundError, AmbiguousIdError } from '../ticket.js';
+import { readTicketByPrefix } from '../ticket.js';
+import { handleError } from '../errors.js';
 import type { Ticket } from '../types.js';
 
 function formatDate(iso: string): string {
@@ -124,14 +125,7 @@ export function registerShow(program: Command): void {
           console.log(formatTicketDetail(ticket));
         }
       } catch (err) {
-        if (err instanceof NotFoundError) {
-          console.error(`Error: ticket '${id}' not found`);
-          process.exit(2);
-        } else if (err instanceof AmbiguousIdError) {
-          console.error(`Error: ambiguous id '${id}': ${(err as AmbiguousIdError).matches.join(', ')}`);
-          process.exit(2);
-        }
-        throw err;
+        handleError(err);
       }
     });
 }

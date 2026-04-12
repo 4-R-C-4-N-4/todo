@@ -1,8 +1,9 @@
 import { Command } from 'commander';
 import { getContext } from '../context.js';
-import { readTicketByPrefix, writeTicket, NotFoundError, AmbiguousIdError } from '../ticket.js';
+import { readTicketByPrefix, writeTicket } from '../ticket.js';
 import { applyTransition } from '../state.js';
 import { resolveHEAD, checkoutBranch, getDefaultBranch } from '../git.js';
+import { handleError } from '../errors.js';
 
 export function registerClose(program: Command): void {
   program
@@ -70,14 +71,7 @@ export function registerClose(program: Command): void {
         }
 
       } catch (err) {
-        if (err instanceof NotFoundError) {
-          console.error(`Error: ticket '${id}' not found`);
-          process.exit(2);
-        } else if (err instanceof AmbiguousIdError) {
-          console.error(`Error: ambiguous id '${id}': ${(err as AmbiguousIdError).matches.join(', ')}`);
-          process.exit(2);
-        }
-        throw err;
+        handleError(err);
       }
     });
 }

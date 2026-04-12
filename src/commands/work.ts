@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import { getContext } from '../context.js';
-import { readTicketByPrefix, writeTicket, readTicket, NotFoundError, AmbiguousIdError, TERMINAL_STATES } from '../ticket.js';
+import { readTicketByPrefix, writeTicket, readTicket, TERMINAL_STATES } from '../ticket.js';
 import { applyTransition } from '../state.js';
+import { handleError } from '../errors.js';
 import {
   branchExists,
   checkoutBranch,
@@ -131,14 +132,7 @@ export function registerWork(program: Command): void {
         }
 
       } catch (err) {
-        if (err instanceof NotFoundError) {
-          console.error(`Error: ticket '${id}' not found`);
-          process.exit(2);
-        } else if (err instanceof AmbiguousIdError) {
-          console.error(`Error: ambiguous id '${id}': ${(err as AmbiguousIdError).matches.join(', ')}`);
-          process.exit(2);
-        }
-        throw err;
+        handleError(err);
       }
     });
 }
