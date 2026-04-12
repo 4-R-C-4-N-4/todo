@@ -6,35 +6,54 @@ Each skill maps to one phase of the work lifecycle.
 
 ## Skills
 
-| Skill | Phase | Input | Output |
-|---|---|---|---|
-| [todo-capture](todo-capture/) | Intake | Any signal (log, test, observation, human) | Ticket ID |
-| [todo-triage](todo-triage/) | Classify | Open ticket ID | Typed, tagged, linked ticket |
-| [todo-analyze](todo-analyze/) | Investigate | Open/active ticket ID | Ticket with analysis + conclusion |
-| [todo-implement](todo-implement/) | Execute | Active ticket ID | Closed ticket with resolution proof |
-| [todo-scan](todo-scan/) | Sweep | Repository | Tickets for all TODO/FIXME comments |
+| Skill | Phase | Use when... |
+|---|---|---|
+| [todo-capture](todo-capture/) | Intake | You have a signal to record |
+| [todo-triage](todo-triage/) | Classify | Ticket arrived with incomplete metadata (raw pipe, bulk scan) |
+| [todo-analyze](todo-analyze/) | Investigate | Root cause is unknown — intermittent, regression, unfamiliar code |
+| [todo-plan](todo-plan/) | Decompose | Work spans multiple commits or needs ordered subtasks |
+| [todo-implement](todo-implement/) | Execute | Root cause is known, time to write code and close the ticket |
 
-## Composition
+## Decision Tree
 
 ```
-todo-capture → todo-triage → todo-analyze → todo-implement
+Got something to do?
+│
+├─ Single fix, cause already known
+│   todo-capture → todo-implement
+│
+├─ Single fix, cause unknown
+│   todo-capture → [todo-triage if raw pipe] → todo-analyze → todo-implement
+│
+└─ Multi-step feature or spec
+    todo-capture (parent) → todo-plan → todo-implement × N children → close parent
 ```
 
-Quick fix (root cause already known):
-```
-todo-capture → todo-implement
+## What's Not Here
+
+**todo-scan** is a CLI command (`todo scan`), not a standalone skill. It's covered in
+todo-capture under "Using `todo scan`". The command is useful in narrow contexts
+(onboarding a new codebase, explicit debt audits) but not a default part of the agent
+workflow — real codebases have hundreds of stale comments and scanning reflexively creates
+ticket floods. Use it deliberately, always with `--dry-run` first.
+
+## Closure Ceremony
+
+All paths end with the same two-commit closure pattern, enforced by todo-implement:
+
+```bash
+git add <code files>
+git commit -m "todo:<id> — describe the change"
+
+todo close <id>          # captures HEAD as resolution commit
+git add .todo/
+git commit -m "todo:<id> — close"
 ```
 
-Feature build:
-```
-todo-capture (parent) → todo-capture (children) → [todo-work → todo-implement] × N → todo-implement (parent)
-```
-
-Intake sweep:
-```
-todo-scan → todo-triage (for each new ticket)
-```
+This is non-negotiable. The linked commit is the proof mechanism.
 
 ## Hermes Integration
 
-Load a skill by name in your Hermes session or cron job. The skills follow the `agentskills.io/specification` format with Hermes-specific metadata under the `metadata.hermes` key.
+Load a skill by name in your Hermes session or cron job. Skills follow the
+`agentskills.io/specification` format with Hermes-specific metadata under
+the `metadata.hermes` key (tags and related_skills).

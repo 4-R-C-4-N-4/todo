@@ -1,11 +1,11 @@
 ---
 name: todo-analyze
 description: >
-  Investigate an open ticket and produce a structured root cause analysis. Transitions the
-  ticket to active, examines git blame and history, and appends blame → evidence → hypothesis →
-  conclusion analysis entries. Use when a bug or feature needs investigation before implementation
-  begins. Output is a ticket with a populated analysis section and a conclusion entry.
-  Requires git and the todo CLI.
+  Investigate an open ticket whose root cause is not yet understood. Transitions to active,
+  examines git blame and history, and appends structured analysis entries leading to a
+  conclusion. Use ONLY when the cause is genuinely unknown — intermittent failures, regressions
+  without an obvious source, unfamiliar codebases. If the fix is already obvious, skip this
+  skill and go directly to todo-implement.
 compatibility: Requires git and the todo CLI (npm i -g @todo/cli).
 metadata:
   hermes:
@@ -15,17 +15,27 @@ metadata:
 
 # todo-analyze
 
-**Purpose:** Investigate a ticket systematically. Produce evidence, not guesses.
+**Purpose:** Investigate a ticket systematically when the cause is not yet known.
 
-**Contract:** Must produce at least one `hypothesis` entry. Must produce a `conclusion` entry before handing off to `todo-implement`.
+## Choose Your Path First
 
-## Steps
+```
+Is the root cause already clear?
+  YES → Skip this skill. Go to todo-implement.
+  NO  → Continue below.
+```
 
-### 1. Start work (transition to active, create branch)
+This skill exists for genuinely complex investigations: intermittent failures, regressions without an obvious commit, behavior that depends on state you have to reconstruct. If you know what to fix, investigating is overhead — commit the fix and close the ticket.
+
+---
+
+## Deep Path — Root Cause Unknown
+
+### 1. Start work (branch + active)
 ```bash
 todo work <id>
 ```
-This creates branch `todo/<id>` (or `todo/<parent-id>` for child tickets) and transitions the ticket to `active`.
+Creates `todo/<id>` branch (or `todo/<parent-id>` for children) and transitions ticket to `active`.
 
 ### 2. Read the ticket in full
 ```bash
@@ -36,23 +46,23 @@ Note the `files` array — these are the linked source locations.
 ### 3. Gather blame evidence
 
 ```bash
-# Git blame on the linked file/lines
+# Blame the linked lines
 git blame src/parser.ts -L 40,60
 
-# Log the last commits touching the file
+# Last commits touching the file
 git log --oneline -20 -- src/parser.ts
 
-# Show the diff that introduced the suspected change
+# Show a suspect commit
 git show <suspect-commit>
 ```
 
-Record what you find:
+Record findings:
 ```bash
 todo analyze <id> --type blame \
   --content "$(git blame src/parser.ts -L 42,42)"
 ```
 
-### 4. Record evidence
+### 4. Record reproduction evidence
 
 ```bash
 todo analyze <id> --type evidence \
@@ -64,15 +74,15 @@ todo analyze <id> --type evidence \
 ```bash
 todo analyze <id> --type hypothesis \
   --confidence high \
-  --content "Empty string guard removed in commit abc1234 during the parser refactor"
+  --content "Null guard removed in commit abc1234 during parser refactor"
 ```
 
 ### 6. Write the conclusion
 
-Reference the supporting entries by their indices (0-based, from `todo show`):
+Reference supporting entries by their 0-based indices (from `todo show`):
 ```bash
 todo analyze <id> --type conclusion \
-  --content "Confirmed: null guard on line 42 was removed in abc1234. Restore it." \
+  --content "Confirmed: null guard removed in abc1234. Restore it." \
   --supporting "0,1,2"
 ```
 
@@ -82,18 +92,22 @@ git add .todo/
 git commit -m "todo:<id> — analysis complete"
 ```
 
+Hand off to `todo-implement`.
+
+---
+
 ## Analysis Entry Types
 
 | Type | When to use |
 |---|---|
-| `blame` | Raw output from git blame, log, or show |
+| `blame` | Raw git blame, log, or show output |
 | `evidence` | Reproduction steps, test results, observed behavior |
-| `hypothesis` | Your proposed explanation — include confidence |
-| `conclusion` | Final confirmed root cause — cite supporting entries |
+| `hypothesis` | Proposed explanation — always include confidence |
+| `conclusion` | Confirmed root cause — cite supporting entry indices |
 
 ## Confidence Levels
 
-- `high` — You reproduced it and traced it to a specific commit/line
+- `high` — Reproduced and traced to a specific commit/line
 - `medium` — Strong evidence but not conclusively reproduced
 - `low` — Plausible guess, needs more investigation
 
@@ -101,10 +115,8 @@ git commit -m "todo:<id> — analysis complete"
 
 A ticket with:
 - State: `active`
-- `analysis` array with at least one `hypothesis` and one `conclusion`
+- `analysis` array with at least one `conclusion`
 - `supporting_evidence` indices linking conclusion to its evidence
-
-Hand off to `todo-implement`.
 
 ---
 

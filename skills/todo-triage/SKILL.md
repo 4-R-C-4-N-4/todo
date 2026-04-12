@@ -1,11 +1,10 @@
 ---
 name: todo-triage
 description: >
-  Classify, tag, and contextualize an open ticket after capture. Corrects the ticket type,
-  adds tags, links to relevant files and commits, checks for duplicates, and optionally
-  transitions to wontfix or duplicate. Use immediately after todo-capture when the ticket
-  needs more context before work begins, or during a sweep of many open tickets.
-  Must NOT transition to active — that's for todo-analyze or todo-implement.
+  Classify, tag, and contextualize a ticket that arrived with incomplete metadata. Use ONLY
+  after raw pipe capture (log or test output with no type, tags, or file context) or after a
+  bulk todo scan sweep. Do NOT use for tickets you created yourself with full metadata — that
+  is wasted ceremony. Must NOT transition to active — that's for todo-analyze or todo-implement.
 compatibility: Requires git and the todo CLI (npm i -g @todo/cli).
 metadata:
   hermes:
@@ -15,9 +14,22 @@ metadata:
 
 # todo-triage
 
-**Purpose:** Assess and classify an open ticket. Improve its signal before anyone acts on it.
+**Purpose:** Enrich tickets that arrived incomplete. Not a mandatory lifecycle phase.
 
 **Contract:** Do NOT transition to `active` here. Leave tickets in `open` state unless marking `wontfix` or `duplicate`.
+
+## When to Use This Skill
+
+**Use it when:**
+- Ticket was created from piped log/test output — no type, tags, or file context
+- Many tickets just arrived from `todo scan` and need bulk classification
+
+**Skip it when:**
+- You created the ticket yourself with `--type`, `--tags`, and `--file` already set
+- The ticket summary is self-explanatory and needs no further metadata
+- You're about to start work immediately via `todo-implement`
+
+If you already know what to do with a ticket, go directly to `todo-implement`. Triage is overhead unless the ticket is actually missing information.
 
 ## Steps
 
@@ -45,27 +57,17 @@ todo edit <id> --type bug
 Tags are freeform. Use kebab-case. Examples: `auth`, `crash`, `regression`, `parser`, `performance`.
 ```bash
 todo edit <id> --tags "auth,crash,regression"
-# Or add one at a time:
-todo edit <id> --add-tag parser
 ```
 
-### 4. Link relevant files and commits
+### 4. Link relevant files
 
 ```bash
-# Link a file (with line range if known)
 todo link <id> --to src/auth/handler.ts
-
-# Link a specific commit (if you know where the bug was introduced)
-todo link <id> --to <commit-sha>
-
-# Link to a related ticket
-todo link <id> --to <other-ticket-id> --relation related
 ```
 
-### 5. Check for duplicates
+### 5. Check for duplicates (after bulk intake only)
 
 ```bash
-# Quick scan
 todo dedup --strategy fingerprint
 todo dedup --strategy file-line
 ```
@@ -78,14 +80,12 @@ git add .todo/ && git commit -m "todo:<id> — duplicate of <canonical-id>"
 
 ### 6. Mark wontfix if appropriate
 
-If the ticket describes intended behavior or is explicitly out of scope:
 ```bash
 todo transition <id> wontfix --note "Intended behavior: empty list is valid state"
 git add .todo/ && git commit -m "todo:<id> — wontfix"
 ```
 
 ### 7. Commit triage changes
-
 ```bash
 git add .todo/
 git commit -m "todo:<id> — triage"
@@ -93,13 +93,9 @@ git commit -m "todo:<id> — triage"
 
 ## Output
 
-A ticket in `open` state with:
-- Correct `type`
-- Meaningful `tags`
-- `files` array linking to relevant code
-- No duplicate open tickets for the same issue
+A ticket in `open` state with correct type, tags, and file links.
 
-Hand off to `todo-analyze` (needs investigation) or `todo-implement` (root cause already known).
+Hand off to `todo-analyze` (root cause unknown) or `todo-implement` (root cause known).
 
 ---
 

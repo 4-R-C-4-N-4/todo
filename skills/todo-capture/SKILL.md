@@ -9,7 +9,7 @@ compatibility: Requires git and the todo CLI installed (npm i -g @todo/cli). Run
 metadata:
   hermes:
     tags: [todo, tickets, capture, intake, bug, triage]
-    related_skills: [todo-triage, todo-analyze, todo-implement]
+    related_skills: [todo-triage, todo-analyze, todo-implement, todo-plan]
 ---
 
 # todo-capture
@@ -23,6 +23,17 @@ metadata:
 - You observe a problem in the code that isn't the primary task
 - You want to register work before starting a branch
 
+## After Capture — Which Skill Next?
+
+```
+Root cause is obvious → todo-implement directly
+Root cause is unknown → todo-analyze
+Raw pipe input with no metadata → todo-triage first
+Planning a multi-step feature → todo-plan
+```
+
+Skip triage if you already know the type, file, and tags — include them at capture time instead.
+
 ## Steps
 
 ### 1. Identify the source type
@@ -35,16 +46,29 @@ metadata:
 | The user told you | `human` | `chore` |
 | A `# TODO` comment in source | `comment` | `chore` |
 
-### 2. Create the ticket
+### 2. Include metadata you already know
 
-**From piped log/test output:**
+If you know the type, file, and tags at capture time, add them now. Don't defer to triage what you can specify in one command.
+
+```bash
+# Full metadata at capture — no triage needed
+todo new "Null pointer in auth handler" \
+  --type bug --source agent \
+  --file src/auth/handler.ts --lines 42,60 \
+  --tags "auth,crash"
+```
+
+### 3. Create the ticket
+
+**From piped log/test output** (metadata unknown — triage after):
 ```bash
 <command> 2>&1 | todo new --type bug --source log --pipe
 ```
 
-**From agent observation:**
+**From agent observation** (metadata known — skip triage):
 ```bash
-todo new "Summary of the issue" --type bug --source agent --file src/parser.ts --lines 42,60
+todo new "Summary of the issue" --type bug --source agent \
+  --file src/parser.ts --lines 42,60 --tags "parser,crash"
 ```
 
 **From human input:**
@@ -52,27 +76,19 @@ todo new "Summary of the issue" --type bug --source agent --file src/parser.ts -
 todo new "The export button crashes when list is empty" --type bug --source human
 ```
 
-**With tags:**
-```bash
-todo new "Pagination off-by-one" --type bug --source agent --tags "pagination,off-by-one"
-```
-
 **As a child of a parent feature ticket:**
 ```bash
 todo new "Add email validation" --type chore --parent <feature-id>
 ```
 
-### 3. Capture the output
+### 4. Capture the output
 
 `todo new` prints only the ticket ID to stdout. Capture it:
 ```bash
 id=$(todo new "Summary" --type bug --source agent)
-echo "Created: $id"
 ```
 
-### 4. Commit the ticket
-
-Ticket files live in `.todo/open/`. Always commit after creating:
+### 5. Commit the ticket
 ```bash
 git add .todo/
 git commit -m "todo:$id — capture"
@@ -84,11 +100,23 @@ git commit -m "todo:$id — capture"
 ```
 Warning: possible duplicate of a1b2c3d4
 ```
-The ticket is still created and linked. Run `todo dedup` after bulk captures to review pairs.
+The ticket is still created. Run `todo dedup` after bulk captures to review pairs.
 
-## Done
+## Using `todo scan`
 
-Output is the ticket ID (8 hex chars). Hand off to `todo-triage` or `todo-implement`.
+`todo scan` sweeps the source tree for TODO/FIXME/HACK/XXX comments and creates tickets. Use it deliberately:
+
+- When taking over a new codebase and wanting a map of known issues
+- When the explicit task is auditing technical debt
+- **Always run `--dry-run` first** and review the list before committing
+
+```bash
+todo scan --dry-run   # preview
+todo scan             # create tickets
+git add .todo/ && git commit -m "chore: capture code comments as tickets"
+```
+
+Real codebases often have hundreds of stale comments. Scan selectively, not reflexively.
 
 ---
 
