@@ -122,7 +122,7 @@ export function registerNew(program: Command): void {
           parentTicket.relationships.children.push(id);
           parentTicket.updated_at = createdAt;
           writeTicket(repoRoot, parentTicket);
-        } catch (err) {
+        } catch {
           console.error(`Error: parent ticket '${opts.parent}' not found`);
           process.exit(1);
         }
