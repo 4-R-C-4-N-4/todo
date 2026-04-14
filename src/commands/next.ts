@@ -36,9 +36,7 @@ export function registerNext(program: Command): void {
 				const children: string[] = parent.relationships?.children ?? [];
 
 				if (children.length === 0) {
-					console.error(
-						`Error: ticket ${parent.id} has no children.`,
-					);
+					console.error(`Error: ticket ${parent.id} has no children.`);
 					process.exit(1);
 				}
 
@@ -83,9 +81,7 @@ export function registerNext(program: Command): void {
 				process.stdout.write(`${nextId}\n`);
 
 				// Print summary on stderr so it doesn't pollute the captured value
-				process.stderr.write(
-					`Activated ${nextId}: ${ticket.summary}\n`,
-				);
+				process.stderr.write(`Activated ${nextId}: ${ticket.summary}\n`);
 			} catch (err) {
 				handleError(err);
 			}

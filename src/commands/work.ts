@@ -24,7 +24,10 @@ export function registerWork(program: Command): void {
 		.command("work <id>")
 		.description("Start or resume work on a ticket")
 		.option("--branch <name>", "override branch name")
-		.option("--skip-branch", "activate ticket without any git branch operations (orchestrator mode)")
+		.option(
+			"--skip-branch",
+			"activate ticket without any git branch operations (orchestrator mode)",
+		)
 		.option("--actor <name>", "override actor (also reads TODO_ACTOR env)")
 		.action((id: string, opts) => {
 			const ctx = getContext(true);

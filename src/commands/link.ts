@@ -69,8 +69,8 @@ export function registerLink(program: Command): void {
 					} else {
 						const key = relation as "depends_on" | "blocks" | "related";
 						if (!ticket.relationships[key]) ticket.relationships[key] = [];
-						if (!ticket.relationships[key]!.includes(resolvedTarget)) {
-							ticket.relationships[key]!.push(resolvedTarget);
+						if (!ticket.relationships[key]?.includes(resolvedTarget)) {
+							ticket.relationships[key]?.push(resolvedTarget);
 						}
 					}
 				} else if (resolvedType === "commit") {
