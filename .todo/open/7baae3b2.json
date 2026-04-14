@@ -1,0 +1,16 @@
+{
+  "id": "7baae3b2",
+  "type": "chore",
+  "state": "open",
+  "summary": "Lint cleanup: non-null assertions in link.ts, unsorted imports in cli.ts, formatting in next.ts and work.ts",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-04-14T20:26:48.460Z",
+  "updated_at": "2026-04-14T20:26:48.460Z",
+  "files": [
+    {
+      "path": "src/commands/link.ts"
+    }
+  ]
+}
