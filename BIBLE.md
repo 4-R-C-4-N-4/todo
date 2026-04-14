@@ -21,11 +21,24 @@ todo close <id>
 ### Feature build (parent + children)
 A parent ticket tracks the feature. Children track subtasks. All children share the parent's branch.
 
-```
+```bash
 todo new "Add OAuth2 login" --type feature
 todo new "Add /auth/callback route" --type chore --parent <feature-id>
 todo new "Store session tokens" --type chore --parent <feature-id>
-todo work <child-id>   # checks out todo/<feature-id> branch
+todo new "Write integration tests" --type chore --parent <feature-id>
+
+# First child creates the shared branch
+todo work <child-1-id>
+
+# Subsequent children — use todo next (preferred)
+while next=$(todo next <feature-id> 2>/dev/null); do
+  # implement $next ...
+  git add -A && git commit -m "todo:$next — ..."
+  todo close $next --note "..."
+  git add .todo/ && git commit -m "todo:$next — close"
+done
+
+todo close <feature-id> --note "All subtasks done."
 ```
 
 Children resolve on the parent branch. Close all children before closing the parent.
@@ -71,7 +84,7 @@ Children resolve on the parent branch. Close all children before closing the par
 
 ## The Branch Workflow
 
-Step by step:
+### Standalone ticket
 
 ```bash
 # 1. Start work — creates branch todo/<id>, transitions ticket to active
@@ -97,7 +110,35 @@ git merge --no-ff todo/<id>
 git branch -d todo/<id>
 ```
 
-For child tickets: `todo work <child-id>` checks out the parent's branch, not a new one.
+### Feature build (shared branch)
+
+All children share `todo/<parent-id>`. The first `todo work` creates the branch; subsequent children must not trigger a redundant checkout.
+
+```bash
+# First child — creates todo/<parent-id>
+todo work <child-1-id>
+git add -A && git commit -m "todo:<child-1-id> — ..."
+todo close <child-1-id> --note "..."
+git add .todo/ && git commit -m "todo:<child-1-id> — close"
+
+# Remaining children — todo next handles activation cleanly
+while next=$(todo next <parent-id> 2>/dev/null); do
+  # implement ...
+  git add -A && git commit -m "todo:$next — ..."
+  todo close $next --note "..."
+  git add .todo/ && git commit -m "todo:$next — close"
+done
+
+# Close parent
+todo close <parent-id> --note "All children done."
+git add .todo/ && git commit -m "todo:<parent-id> — close"
+git checkout main && git merge --no-ff todo/<parent-id>
+git branch -d todo/<parent-id>
+```
+
+`todo next <parent-id>` finds the first open child (in creation order), activates it on the current branch without any git checkout, prints its ID to stdout and a summary to stderr. Exits 1 when all children are done — that's what stops the `while` loop.
+
+If you need manual control instead of a loop, use `todo work --skip-branch <child-id>` to activate a child without a redundant checkout. Do NOT use plain `todo work` for subsequent children on a shared branch — it performs a no-op checkout and prints confusing resume output.
 
 ---
 
@@ -138,6 +179,7 @@ Examples:
 todo:a1b2c3d4 — fix null pointer in auth handler
 todo:a1b2c3d4 — close
 todo:e5f6a7b8 — add /auth/callback route
+todo:e8e874e9 — plan: 4 subtasks
 ```
 
 The `<id>` is the full 8-char ticket ID. Always include it. This ties commits to tickets and enables commit-based dedup and linking.
@@ -155,6 +197,10 @@ The `<id>` is the full 8-char ticket ID. Always include it. This ties commits to
 4. **Using a short prefix when IDs are ambiguous** — If two tickets share a prefix, commands fail. Use more characters of the ID.
 
 5. **Not committing parent ticket after adding children** — Parent `relationships.children` is updated when you create a child. Commit `.todo/` after creating children.
+
+6. **Using plain `todo work` for subsequent children on a shared branch** — After the first child creates `todo/<parent-id>`, calling `todo work <child-N>` again does a redundant checkout and prints misleading "Resumed branch" output. Use `todo next <parent-id>` (preferred) or `todo work --skip-branch <child-N>` instead.
+
+7. **Using `--no-branch` instead of `--skip-branch`** — Commander.js treats `--no-X` as negating the `--X <value>` option. `--no-branch` silently overrides `--branch <name>` rather than setting a new flag. The correct flag is `--skip-branch`.
 
 ---
 
@@ -179,6 +225,10 @@ todo close <id>                        Shorthand: transition to done
   --commit --test --note --checkout
 todo work <id>                         Start/resume work on a ticket
   --branch --actor
+  --skip-branch                        Activate on current branch, no git ops (orchestrator mode)
+todo next <parent-id>                  Activate next open child on current branch
+                                       stdout: ticket ID  stderr: summary  exit 1: all done
+  --actor
 todo analyze <id>                      Add analysis entry
   --type blame|hypothesis|evidence|conclusion (required)
   --content <text> (required)
@@ -193,15 +243,15 @@ todo scan                              Scan source tree for TODO/FIXME comments
 todo dedup                             Find duplicate tickets
   --strategy fingerprint|file-line|semantic
   --apply
-todo export <id>                       Export ticket as JSON/markdown
-  --format json|markdown
+todo export                            Export tickets as JSON
+  --state --type
 ```
 
 ---
 
 ## Skill Interface
 
-Agents operate via four named skills. Each maps to a phase of the lifecycle.
+Agents operate via five named skills. Each maps to a phase of the lifecycle.
 
 **todo-capture** — Create a ticket from any signal (log, test failure, comment, agent observation). Use `todo new` with `--source` and `--pipe` as appropriate. Always commit the result.
 
@@ -209,4 +259,6 @@ Agents operate via four named skills. Each maps to a phase of the lifecycle.
 
 **todo-analyze** — Build up the understanding of a bug or requirement. Use `todo analyze` with sequenced entries: hypothesis → evidence → conclusion. Reference supporting indices. Commit when done.
 
-**todo-implement** — Run `todo work` to branch, implement, commit with the `todo:<id>` prefix, then `todo close`. Always commit `.todo/` after close.
+**todo-plan** — Decompose a feature or spec into a parent ticket with ordered children. Use `todo new --parent` to wire children. Commit the full structure before handing off. Children are worked sequentially on the parent's branch via `todo next`.
+
+**todo-implement** — Run `todo work` to branch, implement, commit with the `todo:<id>` prefix, then `todo close`. Use `todo next` to advance through children on a shared branch. Always commit `.todo/` after close.

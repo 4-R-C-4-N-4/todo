@@ -14,7 +14,11 @@ export class GitError extends Error {
 
 function exec(args: string[], cwd: string): string {
 	try {
-		return execFileSync("git", args, { encoding: "utf8", cwd }).trim();
+		return execFileSync("git", args, {
+			encoding: "utf8",
+			cwd,
+			stdio: ["pipe", "pipe", "pipe"],
+		}).trim();
 	} catch (err: unknown) {
 		const msg = err instanceof Error ? err.message : String(err);
 		throw new GitError(`git ${args.join(" ")} failed: ${msg}`, err);

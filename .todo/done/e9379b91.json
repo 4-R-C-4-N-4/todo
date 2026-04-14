@@ -1,0 +1,26 @@
+{
+  "id": "e9379b91",
+  "type": "chore",
+  "state": "done",
+  "summary": "Suppress stderr in git.ts exec() — add stdio pipe to silence false-alarm output",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-04-14T16:51:12.911Z",
+  "updated_at": "2026-04-14T16:51:43.854Z",
+  "relationships": {
+    "parent": "e8e874e9"
+  },
+  "work": {
+    "branch": "todo/e8e874e9",
+    "base_branch": "main",
+    "started_at": "2026-04-14T16:51:26.375Z",
+    "started_by": "anonlessness"
+  },
+  "resolution": {
+    "commit": "122aca9e1a5cff230721207cf48223620b227f14",
+    "resolved_at": "2026-04-14T16:51:43.854Z",
+    "resolved_by": "unknown",
+    "note": "One-line fix: stdio: ['pipe','pipe','pipe'] in exec(). Silences all git stderr leaks. 105 tests pass, fatal: git cat-file gone from test output."
+  }
+}

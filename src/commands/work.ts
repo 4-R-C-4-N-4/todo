@@ -6,6 +6,7 @@ import {
 	checkoutBranch,
 	createBranch,
 	getCommitsAhead,
+	getCurrentBranch,
 	getDefaultBranch,
 	getGitUserName,
 	isAncestor,
@@ -23,6 +24,7 @@ export function registerWork(program: Command): void {
 		.command("work <id>")
 		.description("Start or resume work on a ticket")
 		.option("--branch <name>", "override branch name")
+		.option("--skip-branch", "activate ticket without any git branch operations (orchestrator mode)")
 		.option("--actor <name>", "override actor (also reads TODO_ACTOR env)")
 		.action((id: string, opts) => {
 			const ctx = getContext(true);
@@ -65,7 +67,31 @@ export function registerWork(program: Command): void {
 
 				const defaultBranch = getDefaultBranch(repoRoot);
 
-				if (branchExists(branch, repoRoot)) {
+				if (opts.skipBranch) {
+					// --no-branch: orchestrator mode — activate on current branch without any git ops
+					const currentBranch = getCurrentBranch(repoRoot);
+					if (ticket.state !== "active") {
+						const now = new Date().toISOString();
+						let updated;
+						try {
+							updated = applyTransition(ticket, "active", { actor }, repoRoot);
+						} catch (err) {
+							console.error(`Error: ${(err as Error).message}`);
+							process.exit(1);
+						}
+						updated.work = {
+							branch: currentBranch,
+							base_branch: defaultBranch,
+							started_at: now,
+							started_by: actor,
+						};
+						updated.updated_at = now;
+						writeTicket(repoRoot, updated);
+					}
+					console.log(
+						`Activated ticket ${ticket.id} on current branch ${currentBranch}.`,
+					);
+				} else if (branchExists(branch, repoRoot)) {
 					// Resume
 					checkoutBranch(branch, repoRoot);
 

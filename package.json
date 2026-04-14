@@ -1,13 +1,13 @@
 {
   "name": "@4-r-c-4-n-4/todo",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Git-native work tracking for coding agents",
   "main": "dist/cli.js",
   "bin": {
     "todo": "./dist/cli.js"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "files": [
     "dist/",
