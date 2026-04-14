@@ -1,0 +1,14 @@
+{
+  "id": "e9379b91",
+  "type": "chore",
+  "state": "open",
+  "summary": "Suppress stderr in git.ts exec() — add stdio pipe to silence false-alarm output",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-04-14T16:51:12.911Z",
+  "updated_at": "2026-04-14T16:51:12.911Z",
+  "relationships": {
+    "parent": "e8e874e9"
+  }
+}
