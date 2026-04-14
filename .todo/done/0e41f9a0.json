@@ -1,0 +1,20 @@
+{
+  "id": "0e41f9a0",
+  "type": "feature",
+  "state": "done",
+  "summary": "Add --no-branch flag to todo work — activate ticket without git branch ops",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-04-14T16:51:12.940Z",
+  "updated_at": "2026-04-14T16:53:12.464Z",
+  "relationships": {
+    "parent": "e8e874e9"
+  },
+  "resolution": {
+    "commit": "772c22ccab8f2be6d4dcfc1b4f73b9fcd7aeebd5",
+    "resolved_at": "2026-04-14T16:53:12.464Z",
+    "resolved_by": "unknown",
+    "note": "--skip-branch (not --no-branch; Commander.js conflict) activates ticket on current branch without any git ops. Idempotent. 105 tests pass."
+  }
+}
