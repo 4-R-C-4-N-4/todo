@@ -1,6 +1,6 @@
 {
   "name": "@4-r-c-4-n-4/todo",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Git-native work tracking for coding agents",
   "main": "dist/cli.js",
   "bin": {
