@@ -219,6 +219,7 @@ todo show <id>                         Show ticket detail
   --raw
 todo edit <id>                         Edit ticket fields
   --summary --description --type --tags --add-tag --rm-tag
+  --parent <id>                        reparent under a different parent
 todo transition <id> <state>           Transition state
   --commit --test --note --depends-on --duplicate-of
 todo close <id>                        Shorthand: transition to done
