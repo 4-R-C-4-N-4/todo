@@ -1,13 +1,13 @@
 {
   "id": "b09011f4",
   "type": "feature",
-  "state": "open",
+  "state": "done",
   "summary": "Stage 1",
   "source": {
     "type": "human"
   },
   "created_at": "2026-04-15T22:17:18.432Z",
-  "updated_at": "2026-04-16T02:46:34.747Z",
+  "updated_at": "2026-04-16T02:48:41.685Z",
   "analysis": [
     {
       "timestamp": "2026-04-16T02:46:34.747Z",
@@ -16,5 +16,11 @@
       "content": "Ticket is a bare stub: no description, no children, no git commits referencing it. Created 2026-04-15T22:17 by human. No related work found in git history or done/ tickets. Cannot close without knowing what Stage 1 refers to for the todo CLI itself.",
       "confidence": "high"
     }
-  ]
+  ],
+  "resolution": {
+    "commit": "bc651425f4c96f5a2b812c6140926a7094371317",
+    "resolved_at": "2026-04-16T02:48:41.685Z",
+    "resolved_by": "unknown",
+    "note": "Erroneous stub — no description, no children, no related work. Closing as broken ticket."
+  }
 }
