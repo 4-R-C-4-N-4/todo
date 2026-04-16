@@ -1,0 +1,20 @@
+{
+  "id": "b09011f4",
+  "type": "feature",
+  "state": "open",
+  "summary": "Stage 1",
+  "source": {
+    "type": "human"
+  },
+  "created_at": "2026-04-15T22:17:18.432Z",
+  "updated_at": "2026-04-16T02:46:34.747Z",
+  "analysis": [
+    {
+      "timestamp": "2026-04-16T02:46:34.747Z",
+      "author": "anonlessness",
+      "type": "evidence",
+      "content": "Ticket is a bare stub: no description, no children, no git commits referencing it. Created 2026-04-15T22:17 by human. No related work found in git history or done/ tickets. Cannot close without knowing what Stage 1 refers to for the todo CLI itself.",
+      "confidence": "high"
+    }
+  ]
+}
