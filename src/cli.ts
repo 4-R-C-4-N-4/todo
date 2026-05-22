@@ -6,12 +6,14 @@ import { registerDedup } from "./commands/dedup.js";
 import { registerEdit } from "./commands/edit.js";
 import { registerExport } from "./commands/export.js";
 import { registerInit } from "./commands/init.js";
+import { registerInstallHooks } from "./commands/install-hooks.js";
 import { registerLink } from "./commands/link.js";
 import { registerList } from "./commands/list.js";
 import { registerNew } from "./commands/new.js";
 import { registerNext } from "./commands/next.js";
 import { registerScan } from "./commands/scan.js";
 import { registerShow } from "./commands/show.js";
+import { registerSync } from "./commands/sync.js";
 import { registerTransition } from "./commands/transition.js";
 import { registerWork } from "./commands/work.js";
 
@@ -35,5 +37,7 @@ registerAnalyze(program);
 registerLink(program);
 registerScan(program);
 registerDedup(program);
+registerInstallHooks(program);
+registerSync(program);
 
 program.parse(process.argv);

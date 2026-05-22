@@ -1,13 +1,13 @@
 {
   "id": "951e9cbd",
   "type": "feature",
-  "state": "open",
+  "state": "done",
   "summary": "Tighten branch conventions and add Hermes Kanban sync",
   "source": {
     "type": "agent"
   },
   "created_at": "2026-05-22T12:32:42.255Z",
-  "updated_at": "2026-05-22T12:32:56.277Z",
+  "updated_at": "2026-05-22T13:06:43.500Z",
   "tags": [
     "branch-conventions",
     "hermes",
@@ -21,5 +21,17 @@
       "e3b282d3",
       "417cadb5"
     ]
+  },
+  "work": {
+    "branch": "todo/951e9cbd",
+    "base_branch": "main",
+    "started_at": "2026-05-22T12:35:37.357Z",
+    "started_by": "anonlessness"
+  },
+  "resolution": {
+    "commit": "d9a2ceb2289cd4bb9e4975876ef933e55d5db7af",
+    "resolved_at": "2026-05-22T13:06:43.500Z",
+    "resolved_by": "unknown",
+    "note": "All 4 children shipped: branch guards (dacf0f74), install-hooks (6784fb63), todo sync (e3b282d3), post-commit auto-sync (417cadb5). Final test count: 162. No regressions in the existing suite (127 → 162)."
   }
 }

@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { checkWorkingTreeClean } from "../branch-guard.js";
 import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
 import {
@@ -69,6 +70,30 @@ export function registerWork(program: Command): void {
 				}
 
 				const defaultBranch = getDefaultBranch(repoRoot);
+
+				// Dirty-tree guard: refuse to leave a different todo/* branch
+				// with uncommitted work. We let `main`/other branches through —
+				// only the cross-ticket case is the one that loses work.
+				if (!opts.skipBranch) {
+					let currentBranch = "";
+					try {
+						currentBranch = getCurrentBranch(repoRoot);
+					} catch {
+						currentBranch = "";
+					}
+					const onDifferentTodoBranch =
+						currentBranch.startsWith("todo/") && currentBranch !== branch;
+					if (onDifferentTodoBranch) {
+						const clean = checkWorkingTreeClean(repoRoot);
+						if (!clean.ok) {
+							console.error(
+								`Error: ${clean.message}\n  You are on ${currentBranch}; ` +
+									`target branch is ${branch}.`,
+							);
+							process.exit(1);
+						}
+					}
+				}
 
 				if (opts.skipBranch) {
 					// --no-branch: orchestrator mode — activate on current branch without any git ops
