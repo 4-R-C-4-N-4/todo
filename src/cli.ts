@@ -6,6 +6,7 @@ import { registerDedup } from "./commands/dedup.js";
 import { registerEdit } from "./commands/edit.js";
 import { registerExport } from "./commands/export.js";
 import { registerInit } from "./commands/init.js";
+import { registerInstallHooks } from "./commands/install-hooks.js";
 import { registerLink } from "./commands/link.js";
 import { registerList } from "./commands/list.js";
 import { registerNew } from "./commands/new.js";
@@ -35,5 +36,6 @@ registerAnalyze(program);
 registerLink(program);
 registerScan(program);
 registerDedup(program);
+registerInstallHooks(program);
 
 program.parse(process.argv);
