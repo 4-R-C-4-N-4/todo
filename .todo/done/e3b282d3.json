@@ -1,13 +1,13 @@
 {
   "id": "e3b282d3",
   "type": "feature",
-  "state": "active",
+  "state": "done",
   "summary": "Add 'todo sync' command that pushes ticket state to a Hermes Kanban board over HTTP",
   "source": {
     "type": "agent"
   },
   "created_at": "2026-05-22T12:32:56.245Z",
-  "updated_at": "2026-05-22T12:42:39.453Z",
+  "updated_at": "2026-05-22T13:04:58.853Z",
   "tags": [
     "hermes"
   ],
@@ -23,5 +23,12 @@
       "content": "Spec drift: description used 'dropped → archived' but src/types.ts defines states as open|active|blocked|done|wontfix|duplicate. Implementing the real mapping: open→todo, active→running, blocked→blocked, done→done, wontfix→archived, duplicate→archived.",
       "confidence": "high"
     }
-  ]
+  ],
+  "resolution": {
+    "commit": "94060c694ecff2d9cc93ba0e2b634c35eedc8f3b",
+    "resolved_at": "2026-05-22T13:04:58.853Z",
+    "resolved_by": "unknown",
+    "test_file": "tests/hermes.test.ts",
+    "note": "todo sync pushes state to Hermes Kanban via HTTP plugin API. 15 tests, full suite 156 passing. Spec drift on 'dropped' state corrected via analysis entry to wontfix/duplicate→archived."
+  }
 }
