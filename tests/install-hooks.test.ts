@@ -244,3 +244,84 @@ describe("CLI install-hooks (end-to-end)", () => {
 		expect(existsSync(hookPath(dir, "prepare-commit-msg"))).toBe(false);
 	});
 });
+
+// ---------------------------------------------------------------------------
+// --with-sync / --only-sync: post-commit auto-sync hook.
+// ---------------------------------------------------------------------------
+
+describe("CLI install-hooks --with-sync / --only-sync", () => {
+	let dir: string;
+
+	beforeEach(() => {
+		dir = makeTempDir();
+		initGitRepo(dir);
+		makeTodoDir(dir);
+		writeConfig(dir);
+		makeCommit(dir, "seed.txt", "seed");
+	});
+
+	afterEach(() => {
+		removeTempDir(dir);
+	});
+
+	it("--with-sync installs both prepare-commit-msg and post-commit", () => {
+		const res = todoCli(dir, ["install-hooks", "--with-sync"]);
+		expect(res.status).toBe(0);
+		expect(existsSync(hookPath(dir, "prepare-commit-msg"))).toBe(true);
+		expect(existsSync(hookPath(dir, "post-commit"))).toBe(true);
+		const pc = readFileSync(hookPath(dir, "post-commit"), "utf8");
+		expect(pc).toContain("@todo-managed-hook post-commit");
+		expect(pc).toContain("todo sync --quiet");
+	});
+
+	it("--only-sync installs only post-commit", () => {
+		const res = todoCli(dir, ["install-hooks", "--only-sync"]);
+		expect(res.status).toBe(0);
+		expect(existsSync(hookPath(dir, "prepare-commit-msg"))).toBe(false);
+		expect(existsSync(hookPath(dir, "post-commit"))).toBe(true);
+	});
+
+	it("--uninstall --with-sync removes both", () => {
+		todoCli(dir, ["install-hooks", "--with-sync"]);
+		const res = todoCli(dir, ["install-hooks", "--uninstall", "--with-sync"]);
+		expect(res.status).toBe(0);
+		expect(existsSync(hookPath(dir, "prepare-commit-msg"))).toBe(false);
+		expect(existsSync(hookPath(dir, "post-commit"))).toBe(false);
+	});
+
+	it("--uninstall --only-sync removes only post-commit", () => {
+		todoCli(dir, ["install-hooks", "--with-sync"]);
+		const res = todoCli(dir, ["install-hooks", "--uninstall", "--only-sync"]);
+		expect(res.status).toBe(0);
+		// prepare-commit-msg untouched.
+		expect(existsSync(hookPath(dir, "prepare-commit-msg"))).toBe(true);
+		expect(existsSync(hookPath(dir, "post-commit"))).toBe(false);
+	});
+
+	it("post-commit hook does not block commit on a non-todo branch", () => {
+		todoCli(dir, ["install-hooks", "--only-sync"]);
+		// Commit on main; hook should early-exit.
+		writeFileSync(join(dir, "a.txt"), "a", "utf8");
+		execFileSync("git", ["add", "a.txt"], { cwd: dir });
+		const start = Date.now();
+		execFileSync("git", ["commit", "-m", "plain"], { cwd: dir });
+		const elapsed = Date.now() - start;
+		expect(elapsed).toBeLessThan(2000); // far less than the sync wall time
+	});
+
+	it("post-commit hook does not block commit even when `todo` is unavailable", () => {
+		todoCli(dir, ["install-hooks", "--with-sync"]);
+		execFileSync("git", ["checkout", "-b", "todo/abc12345"], { cwd: dir });
+		writeFileSync(join(dir, "b.txt"), "b", "utf8");
+		execFileSync("git", ["add", "b.txt"], { cwd: dir });
+		const start = Date.now();
+		// Strip PATH so `todo` isn't resolvable inside the hook. The hook
+		// must swallow that error and not stall the commit.
+		execFileSync("git", ["commit", "-m", "wip"], {
+			cwd: dir,
+			env: { ...process.env, PATH: "/usr/bin:/bin" },
+		});
+		const elapsed = Date.now() - start;
+		expect(elapsed).toBeLessThan(2000);
+	});
+});
