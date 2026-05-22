@@ -1,18 +1,27 @@
 {
   "id": "e3b282d3",
   "type": "feature",
-  "state": "open",
+  "state": "active",
   "summary": "Add 'todo sync' command that pushes ticket state to a Hermes Kanban board over HTTP",
   "source": {
     "type": "agent"
   },
   "created_at": "2026-05-22T12:32:56.245Z",
-  "updated_at": "2026-05-22T12:33:30.541Z",
+  "updated_at": "2026-05-22T12:42:39.453Z",
   "tags": [
     "hermes"
   ],
   "relationships": {
     "parent": "951e9cbd"
   },
-  "description": "Add `todo sync` that POSTs the current repo's ticket states to a Hermes\nKanban board via the dashboard plugin API at /api/plugins/kanban/.\n\nConfig (in .todo/config.json):\n  hermes: {\n    dashboard_url: \"http://localhost:<port>\",\n    board: \"<slug>\",\n    session_token: \"<token>\" | env: \"HERMES_SESSION_TOKEN\"\n  }\nAbsent config => `todo sync` errors with setup instructions.\n\nState map (todo → Kanban column):\n  open    → todo\n  active  → running\n  blocked → blocked\n  done    → done\n  dropped → archived\n\nSync semantics (push-only, .todo/ is source of truth):\n- For each local ticket, GET /api/plugins/kanban/tasks/<id>?board=<slug>.\n- If not found: POST /tasks with title=summary, body=description, status\n  mapped from local state.\n- If found and column differs: PATCH /tasks/<id> with new status.\n- Use a stable id mapping (local ticket id == Kanban task id) if Hermes\n  accepts user-supplied ids; otherwise store the returned Kanban id in\n  ticket.external_refs.hermes_task_id and use it on subsequent syncs.\n- Flags: --dry-run (print what would change), --quiet (only errors), \n  --board <override>.\n\nDone contract: integration test that stands up a mock Hermes server\n(or vitest fetch mock) and verifies POST/PATCH bodies for each transition."
+  "description": "Add `todo sync` that POSTs the current repo's ticket states to a Hermes\nKanban board via the dashboard plugin API at /api/plugins/kanban/.\n\nConfig (in .todo/config.json):\n  hermes: {\n    dashboard_url: \"http://localhost:<port>\",\n    board: \"<slug>\",\n    session_token: \"<token>\" | env: \"HERMES_SESSION_TOKEN\"\n  }\nAbsent config => `todo sync` errors with setup instructions.\n\nState map (todo → Kanban column):\n  open    → todo\n  active  → running\n  blocked → blocked\n  done    → done\n  dropped → archived\n\nSync semantics (push-only, .todo/ is source of truth):\n- For each local ticket, GET /api/plugins/kanban/tasks/<id>?board=<slug>.\n- If not found: POST /tasks with title=summary, body=description, status\n  mapped from local state.\n- If found and column differs: PATCH /tasks/<id> with new status.\n- Use a stable id mapping (local ticket id == Kanban task id) if Hermes\n  accepts user-supplied ids; otherwise store the returned Kanban id in\n  ticket.external_refs.hermes_task_id and use it on subsequent syncs.\n- Flags: --dry-run (print what would change), --quiet (only errors), \n  --board <override>.\n\nDone contract: integration test that stands up a mock Hermes server\n(or vitest fetch mock) and verifies POST/PATCH bodies for each transition.",
+  "analysis": [
+    {
+      "timestamp": "2026-05-22T12:42:39.453Z",
+      "author": "anonlessness",
+      "type": "conclusion",
+      "content": "Spec drift: description used 'dropped → archived' but src/types.ts defines states as open|active|blocked|done|wontfix|duplicate. Implementing the real mapping: open→todo, active→running, blocked→blocked, done→done, wontfix→archived, duplicate→archived.",
+      "confidence": "high"
+    }
+  ]
 }

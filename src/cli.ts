@@ -13,6 +13,7 @@ import { registerNew } from "./commands/new.js";
 import { registerNext } from "./commands/next.js";
 import { registerScan } from "./commands/scan.js";
 import { registerShow } from "./commands/show.js";
+import { registerSync } from "./commands/sync.js";
 import { registerTransition } from "./commands/transition.js";
 import { registerWork } from "./commands/work.js";
 
@@ -37,5 +38,6 @@ registerLink(program);
 registerScan(program);
 registerDedup(program);
 registerInstallHooks(program);
+registerSync(program);
 
 program.parse(process.argv);

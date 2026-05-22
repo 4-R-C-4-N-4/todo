@@ -80,8 +80,15 @@ export interface Ticket {
 	relationships?: Relationships;
 	work?: Work;
 	resolution?: Resolution;
+	external_refs?: Record<string, string>;
 	created_at: string;
 	updated_at: string;
+}
+
+export interface HermesConfig {
+	dashboard_url: string;
+	board: string;
+	session_token?: string;
 }
 
 export interface Config {
@@ -96,4 +103,5 @@ export interface Config {
 		id_length?: number;
 		date_format?: "relative" | "iso";
 	};
+	hermes?: HermesConfig;
 }
