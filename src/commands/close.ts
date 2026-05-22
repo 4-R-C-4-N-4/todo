@@ -1,7 +1,17 @@
 import { Command } from "commander";
+import {
+	checkBranchHasTodoCommit,
+	checkOnExpectedBranch,
+} from "../branch-guard.js";
+import { getCommitPrefix } from "../config.js";
 import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
-import { checkoutBranch, getDefaultBranch, resolveHEAD } from "../git.js";
+import {
+	checkoutBranch,
+	getCurrentBranch,
+	getDefaultBranch,
+	resolveHEAD,
+} from "../git.js";
 import { applyTransition } from "../state.js";
 import { readTicketByPrefix, writeTicket } from "../ticket.js";
 
@@ -13,12 +23,39 @@ export function registerClose(program: Command): void {
 		.option("--test <file::func>", "test file and function (colon-separated)")
 		.option("--note <text>", "resolution note")
 		.option("--checkout", "git checkout base_branch after closing")
+		.option("--force", "skip branch and commit-message guards")
 		.action((id: string, opts) => {
 			const ctx = getContext(true);
-			const { repoRoot } = ctx;
+			const { repoRoot, config } = ctx;
 
 			try {
 				const ticket = readTicketByPrefix(repoRoot, id);
+
+				// Branch-convention guards (skippable with --force).
+				if (!opts.force) {
+					let currentBranch = "";
+					try {
+						currentBranch = getCurrentBranch(repoRoot);
+					} catch {
+						// Detached HEAD or other; treat as a branch mismatch.
+					}
+					const branchCheck = checkOnExpectedBranch(ticket, currentBranch);
+					if (!branchCheck.ok) {
+						console.error(`Error: ${branchCheck.message}`);
+						process.exit(1);
+					}
+					const commitCheck = checkBranchHasTodoCommit(
+						ticket,
+						repoRoot,
+						getCommitPrefix(config),
+					);
+					if (!commitCheck.ok) {
+						console.error(`Error: ${commitCheck.message}`);
+						process.exit(1);
+					}
+				} else {
+					console.error("Warning: --force used; skipping branch guards.");
+				}
 
 				// Resolve commit
 				let commit: string;

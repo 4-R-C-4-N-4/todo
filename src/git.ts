@@ -139,3 +139,32 @@ export function checkoutBranch(
 export function getGitUserName(cwd: string = process.cwd()): string {
 	return exec(["config", "user.name"], cwd);
 }
+
+export function hasUncommittedChanges(cwd: string = process.cwd()): boolean {
+	const out = exec(["status", "--porcelain"], cwd);
+	return out.length > 0;
+}
+
+export function getCommitMessagesBetween(
+	base: string,
+	head: string,
+	cwd: string = process.cwd(),
+): string[] {
+	try {
+		const out = exec(
+			["log", `${base}..${head}`, "--format=%s%n%b%n--END--"],
+			cwd,
+		);
+		if (!out) return [];
+		return out
+			.split("\n--END--")
+			.map((s) => s.trim())
+			.filter((s) => s.length > 0);
+	} catch {
+		return [];
+	}
+}
+
+export function getGitDir(cwd: string = process.cwd()): string {
+	return exec(["rev-parse", "--git-dir"], cwd);
+}
