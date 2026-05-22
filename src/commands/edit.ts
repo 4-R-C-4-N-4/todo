@@ -37,9 +37,7 @@ export function registerEdit(program: Command): void {
 					try {
 						newParent = readTicketByPrefix(repoRoot, opts.parent as string);
 					} catch {
-						console.error(
-							`Error: parent ticket '${opts.parent}' not found`,
-						);
+						console.error(`Error: parent ticket '${opts.parent}' not found`);
 						process.exit(1);
 					}
 					if (newParent.id === ticket.id) {
