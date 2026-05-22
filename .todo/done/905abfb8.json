@@ -1,0 +1,28 @@
+{
+  "id": "905abfb8",
+  "type": "bug",
+  "state": "done",
+  "summary": "cli.ts hardcodes version '1.0.0' instead of reading from package.json",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-22T22:48:42.955Z",
+  "updated_at": "2026-05-22T22:49:27.717Z",
+  "tags": [
+    "cli"
+  ],
+  "work": {
+    "branch": "todo/905abfb8",
+    "base_branch": "main",
+    "started_at": "2026-05-22T22:48:43.000Z",
+    "started_by": "anonlessness"
+  },
+  "resolution": {
+    "commit": "d4c86d07106536760a37c6c58e986829999989fc",
+    "resolved_at": "2026-05-22T22:49:27.717Z",
+    "resolved_by": "unknown",
+    "test_file": "tests/cli-version.test.ts",
+    "test_function": "prints the version field from package.json",
+    "note": "Reads version from package.json at runtime instead of hardcoding. Regression test asserts the output matches package.json."
+  }
+}
