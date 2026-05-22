@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { Command } from "commander";
 import { registerAnalyze } from "./commands/analyze.js";
 import { registerClose } from "./commands/close.js";
@@ -17,11 +19,17 @@ import { registerSync } from "./commands/sync.js";
 import { registerTransition } from "./commands/transition.js";
 import { registerWork } from "./commands/work.js";
 
+// Read version from the package.json shipped alongside dist/. Avoids drift
+// between the published npm version and what `todo --version` prints.
+const pkg = JSON.parse(
+	readFileSync(join(__dirname, "..", "package.json"), "utf8"),
+) as { version: string };
+
 const program = new Command();
 program
 	.name("todo")
 	.description("Git-native work tracking for coding agents")
-	.version("1.0.0");
+	.version(pkg.version);
 
 registerInit(program);
 registerNew(program);
