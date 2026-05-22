@@ -1,0 +1,25 @@
+{
+  "id": "951e9cbd",
+  "type": "feature",
+  "state": "open",
+  "summary": "Tighten branch conventions and add Hermes Kanban sync",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-22T12:32:42.255Z",
+  "updated_at": "2026-05-22T12:32:56.277Z",
+  "tags": [
+    "branch-conventions",
+    "hermes",
+    "git-hooks"
+  ],
+  "description": "Agents using this tool frequently drift from the branch/commit conventions\ndocumented in the todo-implement skill (wrong branch, missing `todo:<id>`\ncommit prefix, squash-merging, forgetting to commit `.todo/`). Prose alone\nisn't enough — turn the conventions into hard CLI preconditions and a git\nhook that prevents the wrong commit message from being written in the\nfirst place.\n\nSeparately, the user runs Hermes locally and wants ticket state mirrored\nto its Kanban dashboard (HTTP plugin at /api/plugins/kanban/) for board-\nstyle visibility. Push-only is fine; .todo/ remains the source of truth.\n\nDone when: branch guards + a `todo install-hooks` command + `todo sync`\npush-to-Hermes + an opt-in post-commit auto-sync all ship behind a clean\nconfig in .todo/config.json. All children below closed.",
+  "relationships": {
+    "children": [
+      "dacf0f74",
+      "6784fb63",
+      "e3b282d3",
+      "417cadb5"
+    ]
+  }
+}
