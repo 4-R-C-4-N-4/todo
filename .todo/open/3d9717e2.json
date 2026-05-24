@@ -1,0 +1,22 @@
+{
+  "id": "3d9717e2",
+  "type": "refactor",
+  "state": "open",
+  "summary": "Collapse /todo-analyze skill into /todo-triage and tighten skill cross-references",
+  "source": {
+    "type": "human"
+  },
+  "created_at": "2026-05-24T23:38:22.129Z",
+  "updated_at": "2026-05-24T23:38:52.394Z",
+  "tags": [
+    "skills",
+    "docs"
+  ],
+  "description": "The /todo-analyze skill creates two problems:\n\n1. Name collision with the CLI primitive 'todo analyze'. The skill describes\n   a deep investigation workflow; the CLI is a small structured-note\n   primitive. Confusing.\n2. Most of the skill's content overlaps with neighbors: the deep-\n   investigation case is rare and could live as a section under /todo-triage,\n   while mid-flight 'I learned something' notes already belong in\n   /todo-implement step 2b.\n\nPlan: delete skills/todo-analyze/ and merge its deep-investigation content\ninto skills/todo-triage/. Tighten cross-skill 'next step' tables in\ncapture, plan, and implement so capture/plan are no longer presented as\ninterchangeable. Update skills/README.md.\n\nThe CLI command \\`todo analyze\\` is untouched — it's a useful primitive\nimplement leans on.",
+  "relationships": {
+    "children": [
+      "b2fdf342",
+      "b35dd811"
+    ]
+  }
+}

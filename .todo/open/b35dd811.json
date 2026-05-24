@@ -1,0 +1,22 @@
+{
+  "id": "b35dd811",
+  "type": "refactor",
+  "state": "open",
+  "summary": "Tighten capture/plan/implement cross-references and skills/README.md after analyze removal",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-24T23:38:52.394Z",
+  "updated_at": "2026-05-24T23:39:08.914Z",
+  "tags": [
+    "skills",
+    "docs"
+  ],
+  "relationships": {
+    "parent": "3d9717e2",
+    "depends_on": [
+      "b2fdf342"
+    ]
+  },
+  "description": "After b2fdf342 deletes /todo-analyze, every other skill needs a small\ncleanup pass:\n\n- skills/todo-capture/SKILL.md: 'After Capture — Which Skill Next?' table\n  removes the 'Root cause is unknown → todo-analyze' row (or redirects to\n  todo-triage). Add clearer note that for multi-step work, jump straight to\n  /todo-plan instead of capture-then-plan.\n- skills/todo-plan/SKILL.md: clarify in 'When to Use' that plan subsumes\n  capture for the parent — no need to invoke /todo-capture first.\n- skills/todo-implement/SKILL.md: step 2b ('spec wrong or incomplete')\n  becomes the canonical home for mid-flight analyze-the-CLI-primitive usage.\n  Add an explicit 'For deep investigations, see /todo-triage' pointer.\n- skills/README.md: update the skill list (5 → 4) and the relationships\n  diagram if present.\n- All frontmatter 'related_skills' arrays: remove todo-analyze references.\n\nDone contract: no skill file mentions /todo-analyze; all 'next skill'\npointers resolve to one of capture/triage/plan/implement; README skill\nlist is current.\n\nDepends on: b2fdf342 (the analyze→triage merge must land first)."
+}
