@@ -9,7 +9,7 @@ compatibility: Requires git and the todo CLI installed (npm i -g @todo/cli). Run
 metadata:
   hermes:
     tags: [todo, tickets, capture, intake, bug, triage]
-    related_skills: [todo-triage, todo-analyze, todo-implement, todo-plan]
+    related_skills: [todo-triage, todo-implement, todo-plan]
 ---
 
 # todo-capture
@@ -26,13 +26,12 @@ metadata:
 ## After Capture — Which Skill Next?
 
 ```
-Root cause is obvious → todo-implement directly
-Root cause is unknown → todo-analyze
-Raw pipe input with no metadata → todo-triage first
-Planning a multi-step feature → todo-plan
+Root cause is obvious AND metadata is full → /todo-implement directly
+Root cause is unknown OR metadata incomplete → /todo-triage
+Planning a multi-step feature                → /todo-plan
 ```
 
-Skip triage if you already know the type, file, and tags — include them at capture time instead.
+For multi-step work, jump straight to `/todo-plan` — it creates the parent ticket itself, so capturing first is duplicate ceremony. Skip `/todo-triage` whenever you already know the type, file, and tags AND the fix is clear.
 
 ## Steps
 

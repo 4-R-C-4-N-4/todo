@@ -10,7 +10,7 @@ compatibility: Requires git and the todo CLI (npm i -g @todo/cli).
 metadata:
   hermes:
     tags: [todo, tickets, implementation, fix, feature, close, done]
-    related_skills: [todo-analyze, todo-capture, todo-plan]
+    related_skills: [todo-triage, todo-capture, todo-plan]
 ---
 
 # todo-implement
@@ -32,6 +32,20 @@ Creates/resumes `todo/<id>` branch. Transitions ticket to `active` if not alread
 todo show <id>
 ```
 If analysis entries exist, read the conclusion before writing any code.
+
+### 2b. If the ticket spec is wrong or incomplete
+
+If reading the ticket reveals the spec is incorrect (wrong API, wrong HTML selector, wrong file path, etc.), add an analysis note BEFORE writing any code:
+
+```bash
+todo analyze <id> --type conclusion \
+  --content "Spec says X but actual behaviour is Y. Fix: do Z." \
+  --confidence high
+```
+
+Then implement the correct approach. Do NOT close the ticket against the wrong spec. This creates a paper trail and updates the ticket for future reference.
+
+For a *deep* investigation (root cause genuinely unknown, multi-step evidence loop), drop back to `/todo-triage` in Deep Investigation mode — same CLI primitive, more structured workflow.
 
 ### 3. Implement the fix
 

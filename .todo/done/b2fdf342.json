@@ -1,0 +1,24 @@
+{
+  "id": "b2fdf342",
+  "type": "refactor",
+  "state": "done",
+  "summary": "Rewrite skills/todo-triage to absorb deep-investigation content; delete skills/todo-analyze/",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-24T23:38:52.355Z",
+  "updated_at": "2026-05-25T03:43:41.771Z",
+  "tags": [
+    "skills"
+  ],
+  "relationships": {
+    "parent": "3d9717e2"
+  },
+  "description": "Move the genuinely valuable bits of skills/todo-analyze/SKILL.md (the\n'Deep Path — Root Cause Unknown' material: git blame, hypothesis/evidence\nloop, conclusion) into a new section of skills/todo-triage/SKILL.md.\n\ntodo-triage's existing scope (bulk classification of pipe-captured tickets)\nstays. The merged skill gains a 'Deep investigation' section for the rare\nhard-bug case. Frontmatter description updated to reflect both modes.\n\nThen delete skills/todo-analyze/ entirely (including any references files).\n\nDone contract: skills/todo-analyze/ no longer exists; skills/todo-triage/\nSKILL.md has a clearly-labeled 'Deep investigation' section; cross-link\nin skills/todo-implement/SKILL.md step 2b updated to point at the new\nlocation instead of /todo-analyze. (Detailed cross-ref pass is child b35dd811.)",
+  "resolution": {
+    "commit": "bd7b5bf0143975ef55a9469a188a8fefcb1e98e6",
+    "resolved_at": "2026-05-25T03:43:41.771Z",
+    "resolved_by": "unknown",
+    "note": "Triage skill now covers both Classification and Deep Investigation modes with a clear gate up top. analyze/ skill deleted. Cross-ref cleanup deferred to b35dd811."
+  }
+}

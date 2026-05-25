@@ -23,7 +23,9 @@ metadata:
 - You're working from a design spec or requirements document
 - You want another agent session to be able to resume without context from this one
 
-For a single-commit fix, skip planning and go directly to `todo-implement`.
+For a single-commit fix, skip planning and go directly to `/todo-implement`.
+
+**Subsumes capture for the parent.** Step 1 below creates the parent ticket directly — you don't need to invoke `/todo-capture` first. For single-ticket intake (no children), use `/todo-capture`.
 
 ## Rule: What Makes a Good Child Ticket
 
