@@ -8,11 +8,12 @@ Each skill maps to one phase of the work lifecycle.
 
 | Skill | Phase | Use when... |
 |---|---|---|
-| [todo-capture](todo-capture/) | Intake | You have a signal to record |
-| [todo-triage](todo-triage/) | Classify | Ticket arrived with incomplete metadata (raw pipe, bulk scan) |
-| [todo-analyze](todo-analyze/) | Investigate | Root cause is unknown — intermittent, regression, unfamiliar code |
-| [todo-plan](todo-plan/) | Decompose | Work spans multiple commits or needs ordered subtasks |
+| [todo-capture](todo-capture/) | Intake | You have a single-ticket signal to record |
+| [todo-triage](todo-triage/) | Classify / Investigate | Ticket isn't ready: metadata is incomplete OR root cause is unknown |
+| [todo-plan](todo-plan/) | Decompose | Work spans multiple commits or needs ordered subtasks (subsumes capture for the parent) |
 | [todo-implement](todo-implement/) | Execute | Root cause is known, time to write code and close the ticket |
+
+The `todo analyze` CLI command is a structured-note primitive used inside both `todo-triage` (Deep Investigation mode) and `todo-implement` step 2b. It is not its own skill.
 
 ## Decision Tree
 
@@ -22,11 +23,11 @@ Got something to do?
 ├─ Single fix, cause already known
 │   todo-capture → todo-implement
 │
-├─ Single fix, cause unknown
-│   todo-capture → [todo-triage if raw pipe] → todo-analyze → todo-implement
+├─ Single fix, cause unknown OR metadata incomplete
+│   todo-capture → todo-triage → todo-implement
 │
 └─ Multi-step feature or spec
-    todo-capture (parent) → todo-plan → todo-implement × N children → close parent
+    todo-plan → todo-implement × N children → close parent
 ```
 
 ## What's Not Here
