@@ -1,0 +1,20 @@
+{
+  "id": "f33e500d",
+  "type": "bug",
+  "state": "open",
+  "summary": "Branch guard's commit-prefix check fires on parent ticket close (no own code commit)",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-25T03:47:27.294Z",
+  "updated_at": "2026-05-25T03:47:27.332Z",
+  "files": [
+    {
+      "path": "src/commands/close.ts"
+    }
+  ],
+  "tags": [
+    "branch-conventions"
+  ],
+  "description": "checkBranchHasTodoCommit refuses to close any ticket without at least one\ncommit on the branch whose message contains 'todo:<id>'. For PARENT tickets,\nthis is wrong by design: parents have no code change of their own — the\nwork lives in children, whose commits use 'todo:<child-id>' prefixes.\nThe /todo-implement skill explicitly closes parents with just a note:\n  todo close <parent-id> --note \"All subtasks complete.\"\n\nCaught manually this session — had to --force close parent 3d9717e2 even\nthough all children were properly closed and committed.\n\nFix: in checkBranchHasTodoCommit (or its caller in close.ts), skip the\ncommit-prefix check when ticket.relationships?.children is non-empty AND\nevery child is in a terminal state. The branch-match check should still\nfire (parent close should still require being on the parent's branch).\n\nDone contract: tests/branch-guard.test.ts gains a case showing parent\nclose succeeds when all children are closed even with no 'todo:<parent>'\ncommit on the branch. Existing --force escape stays in place for edge\ncases."
+}
