@@ -1,13 +1,13 @@
 {
   "id": "3d9717e2",
   "type": "refactor",
-  "state": "active",
+  "state": "done",
   "summary": "Collapse /todo-analyze skill into /todo-triage and tighten skill cross-references",
   "source": {
     "type": "human"
   },
   "created_at": "2026-05-24T23:38:22.129Z",
-  "updated_at": "2026-05-25T03:41:34.106Z",
+  "updated_at": "2026-05-25T03:47:03.481Z",
   "tags": [
     "skills",
     "docs"
@@ -24,5 +24,11 @@
     "base_branch": "main",
     "started_at": "2026-05-25T03:41:34.106Z",
     "started_by": "anonlessness"
+  },
+  "resolution": {
+    "commit": "18c8970236d5070bf0fccde1c1c9fb00f4ce2f5b",
+    "resolved_at": "2026-05-25T03:47:03.481Z",
+    "resolved_by": "unknown",
+    "note": "Both children shipped: /todo-analyze removed; deep-investigation content merged into /todo-triage as a second mode; cross-references in capture/plan/implement/README cleaned up. Skill surface 5 → 4; name collision with the 'todo analyze' CLI primitive resolved."
   }
 }
