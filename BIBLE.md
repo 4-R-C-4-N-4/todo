@@ -140,6 +140,19 @@ git branch -d todo/<parent-id>
 
 If you need manual control instead of a loop, use `todo work --skip-branch <child-id>` to activate a child without a redundant checkout. Do NOT use plain `todo work` for subsequent children on a shared branch — it performs a no-op checkout and prints confusing resume output.
 
+### Branch Protection (recommended)
+
+The local-merge step above is convenient for solo work, but `todo` is built for agent-driven flows where unreviewed code shouldn't land on `main` silently. GitHub's branch-protection rules close that gap without adding any process inside the tool — turn them on once and the same `todo` workflow stops bypassing review.
+
+For `main`, enable:
+
+- **Require a pull request before merging** — the agent stops at the PR; you click Merge.
+- **Require status checks to pass** — your CI's `Lint, typecheck, test` job. Catches the kind of regression that this session's commit `b6709ed` (missing `pretest` hook) would have stopped on red.
+- **Require linear history** — enforces the skill's `--no-ff` rule. Squash merges would orphan the resolution-commit SHAs stored in `.todo/done/<id>.json`.
+- **Require approvals (optional)** — even for a solo repo, setting "1 approval" forces you to actually open the PR and skim the diff before clicking through. Cheap insurance against autopilot merges.
+
+Once protected, the closing step becomes `todo pr` (push branch + open PR + stop) instead of a local merge. The local-merge sequence in the previous sections remains valid for unprotected repos or quick solo work.
+
 ---
 
 ## Ticket Types
