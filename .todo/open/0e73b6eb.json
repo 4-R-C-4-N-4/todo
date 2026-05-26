@@ -1,0 +1,23 @@
+{
+  "id": "0e73b6eb",
+  "type": "feature",
+  "state": "open",
+  "summary": "Default the close→merge step to opening a PR instead of merging local main",
+  "source": {
+    "type": "human"
+  },
+  "created_at": "2026-05-26T02:25:25.873Z",
+  "updated_at": "2026-05-26T02:25:25.973Z",
+  "tags": [
+    "workflow",
+    "pr",
+    "skills"
+  ],
+  "description": "Today /todo-implement step 8 does:\n  git checkout main\n  git merge --no-ff todo/<id>\n  git branch -d todo/<id>\n\nThat skips human review entirely. This session shipped at least two\nthings to local main that a PR would have caught (false-positive bug\nadbb0d8d; --force parent close 3d9717e2).\n\nGoal: make 'open a PR and stop' the default; keep local-merge available\nbut not the default.\n\nShape:\n1. New 'todo pr' command that:\n   - Verifies HEAD is on todo/<id>\n   - Pushes branch to origin (gh pr create handles -u)\n   - Auto-generates PR title from the ticket summary\n   - Auto-generates PR body from description + resolution notes\n     (for parents, aggregate children's resolution notes)\n   - Runs 'gh pr create' (or 'gh pr edit' if one already exists)\n   - Prints the PR URL on success\n   - Errors clearly if gh missing or no remote configured\n\n2. /todo-implement step 8 rewritten to call 'todo pr' instead of merging.\n   Local merge stays documented as an opt-out path (e.g., 'when working\n   solo and main isn't protected, you can skip the PR step and merge\n   locally'). No --no-pr flag — just two paths in the skill.\n\nOut of scope: auto-merge after CI. PRs are review gates; agents stop\nafter opening them.",
+  "relationships": {
+    "children": [
+      "ed3efe3e",
+      "7b2279c7"
+    ]
+  }
+}

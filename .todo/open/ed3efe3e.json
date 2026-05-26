@@ -1,0 +1,19 @@
+{
+  "id": "ed3efe3e",
+  "type": "feature",
+  "state": "open",
+  "summary": "Add 'todo pr' command: push branch + gh pr create with ticket-derived title/body",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-26T02:25:25.940Z",
+  "updated_at": "2026-05-26T02:25:26.010Z",
+  "tags": [
+    "pr",
+    "cli"
+  ],
+  "relationships": {
+    "parent": "0e73b6eb"
+  },
+  "description": "New CLI command 'todo pr' that wraps the push + GitHub PR creation.\n\nBehavior:\n- Resolve current branch via git symbolic-ref --short HEAD. Must match\n  todo/<id> pattern; error if not.\n- Read the ticket (parent or single) by deriving id from branch name.\n- Push branch to origin with -u (idempotent).\n- Auto-generate PR title: ticket.summary (max ~70 chars).\n- Auto-generate PR body:\n  - For parent tickets: a 'Children' section listing each closed child\n    with its resolution note + linked commit short SHA. Parent's own\n    resolution note (if any) at the top.\n  - For single tickets: description + resolution note + linked commit.\n- Call 'gh pr create --title ... --body ...' via heredoc to preserve\n  formatting. If a PR already exists for the branch, run 'gh pr edit'\n  to update title/body instead (detect via 'gh pr view --json url').\n- Print the PR URL on stdout.\n- Flags: --base <branch> (default: detected default branch),\n  --draft (open as draft PR).\n\nErrors clearly when:\n- gh CLI missing → message with install pointer\n- No git remote → message\n- Not on a todo/<id> branch → message\n\nDone contract: tests/pr.test.ts covers (a) title/body generation from a\nparent ticket with children, (b) branch detection (refuses on main),\n(c) gh-missing error path (mock execFileSync), (d) PR-exists update path.\nMocking 'gh' is fine — we're testing the wrapper logic, not GitHub."
+}
