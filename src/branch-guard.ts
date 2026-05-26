@@ -9,6 +9,7 @@ import {
 	getDefaultBranch,
 	hasUncommittedChanges,
 } from "./git.js";
+import { readTicket, TERMINAL_STATES } from "./ticket.js";
 import type { Ticket } from "./types.js";
 
 export function expectedBranchFor(ticket: Ticket): string {
@@ -55,6 +56,32 @@ export function checkBranchHasTodoCommit(
 			`  Either amend a commit to include the prefix, or pass --force ` +
 			`if this ticket genuinely has no code change attached.`,
 	};
+}
+
+/**
+ * True iff the ticket has at least one child AND every child is in a
+ * terminal state (done/wontfix/duplicate). Parents in this shape carry no
+ * code commit of their own — the work lives in children whose commits use
+ * `todo:<child-id>` prefixes — so the commit-prefix branch guard should
+ * skip them. Children with missing files are treated as non-terminal so
+ * the guard stays conservative.
+ */
+export function isParentWithAllChildrenClosed(
+	ticket: Ticket,
+	repoRoot: string,
+): boolean {
+	const children = ticket.relationships?.children ?? [];
+	if (children.length === 0) return false;
+	for (const childId of children) {
+		let child: Ticket;
+		try {
+			child = readTicket(repoRoot, childId);
+		} catch {
+			return false;
+		}
+		if (!TERMINAL_STATES.includes(child.state)) return false;
+	}
+	return true;
 }
 
 export function checkWorkingTreeClean(repoRoot: string): BranchCheck {
