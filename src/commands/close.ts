@@ -2,6 +2,7 @@ import { Command } from "commander";
 import {
 	checkBranchHasTodoCommit,
 	checkOnExpectedBranch,
+	isParentWithAllChildrenClosed,
 } from "../branch-guard.js";
 import { getCommitPrefix } from "../config.js";
 import { getContext } from "../context.js";
@@ -44,14 +45,19 @@ export function registerClose(program: Command): void {
 						console.error(`Error: ${branchCheck.message}`);
 						process.exit(1);
 					}
-					const commitCheck = checkBranchHasTodoCommit(
-						ticket,
-						repoRoot,
-						getCommitPrefix(config),
-					);
-					if (!commitCheck.ok) {
-						console.error(`Error: ${commitCheck.message}`);
-						process.exit(1);
+					// Parents with all-terminal children carry no code commit of
+					// their own — skip the commit-prefix check for them. The
+					// branch-match check above still fires.
+					if (!isParentWithAllChildrenClosed(ticket, repoRoot)) {
+						const commitCheck = checkBranchHasTodoCommit(
+							ticket,
+							repoRoot,
+							getCommitPrefix(config),
+						);
+						if (!commitCheck.ok) {
+							console.error(`Error: ${commitCheck.message}`);
+							process.exit(1);
+						}
 					}
 				} else {
 					console.error("Warning: --force used; skipping branch guards.");

@@ -7,6 +7,7 @@ import {
 	checkOnExpectedBranch,
 	checkWorkingTreeClean,
 	expectedBranchFor,
+	isParentWithAllChildrenClosed,
 } from "../src/branch-guard.js";
 import { DEFAULT_CONFIG } from "../src/config.js";
 import { writeTicket } from "../src/ticket.js";
@@ -153,6 +154,65 @@ describe("checkBranchHasTodoCommit", () => {
 	});
 });
 
+describe("isParentWithAllChildrenClosed", () => {
+	let dir: string;
+
+	beforeEach(() => {
+		dir = makeTempDir();
+		initGitRepo(dir);
+		makeTodoDir(dir);
+		writeConfig(dir);
+		makeCommit(dir, "seed.txt", "seed");
+	});
+
+	afterEach(() => {
+		removeTempDir(dir);
+	});
+
+	it("returns false for tickets with no children", () => {
+		const t = makeTicket({ id: "lone0001" });
+		writeTicket(dir, t);
+		expect(isParentWithAllChildrenClosed(t, dir)).toBe(false);
+	});
+
+	it("returns true when every child is in a terminal state", () => {
+		const c1 = makeTicket({ id: "child001", state: "done" });
+		const c2 = makeTicket({ id: "child002", state: "wontfix" });
+		const c3 = makeTicket({ id: "child003", state: "duplicate" });
+		writeTicket(dir, c1);
+		writeTicket(dir, c2);
+		writeTicket(dir, c3);
+		const parent = makeTicket({
+			id: "parent01",
+			relationships: { children: ["child001", "child002", "child003"] },
+		});
+		writeTicket(dir, parent);
+		expect(isParentWithAllChildrenClosed(parent, dir)).toBe(true);
+	});
+
+	it("returns false when at least one child is still open/active/blocked", () => {
+		const c1 = makeTicket({ id: "child001", state: "done" });
+		const c2 = makeTicket({ id: "child002", state: "active" });
+		writeTicket(dir, c1);
+		writeTicket(dir, c2);
+		const parent = makeTicket({
+			id: "parent01",
+			relationships: { children: ["child001", "child002"] },
+		});
+		writeTicket(dir, parent);
+		expect(isParentWithAllChildrenClosed(parent, dir)).toBe(false);
+	});
+
+	it("returns false when a child file is missing (conservative)", () => {
+		const parent = makeTicket({
+			id: "parent01",
+			relationships: { children: ["missing-child"] },
+		});
+		writeTicket(dir, parent);
+		expect(isParentWithAllChildrenClosed(parent, dir)).toBe(false);
+	});
+});
+
 describe("checkWorkingTreeClean", () => {
 	let dir: string;
 
@@ -280,6 +340,140 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		]);
 		expect(res.status).toBe(0);
 		expect(res.stderr).toContain("Warning: --force");
+	});
+
+	it("parent close succeeds when all children are closed (no own commit needed)", () => {
+		// Two terminal children, parent has no commit of its own. This is the
+		// pattern that used to require --force.
+		const child = makeTicket({
+			id: "child001",
+			type: "chore",
+			state: "done",
+			resolution: {
+				commit: "0".repeat(40),
+				resolved_at: new Date().toISOString(),
+				resolved_by: "test",
+			},
+			relationships: { parent: "parent01" },
+		});
+		writeTicket(dir, child);
+		const parent = makeTicket({
+			id: "parent01",
+			type: "feature",
+			state: "active",
+			work: {
+				branch: "todo/parent01",
+				base_branch: "main",
+				started_at: new Date().toISOString(),
+				started_by: "test",
+			},
+			relationships: { children: ["child001"] },
+		});
+		writeTicket(dir, parent);
+
+		// Be on the parent branch with a child commit (not parent's prefix).
+		git(dir, ["checkout", "-b", "todo/parent01"]);
+		writeFileSync(join(dir, "code.txt"), "x", "utf8");
+		git(dir, ["add", "code.txt"]);
+		git(dir, ["commit", "-m", "todo:child001 — work"]);
+
+		const res = todoCli(dir, [
+			"close",
+			"parent01",
+			"--note",
+			"All children shipped",
+		]);
+		expect(res.status).toBe(0);
+		expect(res.stderr).not.toContain("--force");
+	});
+
+	it("parent close STILL refuses when a child is open (commit-prefix check fires)", () => {
+		// One open child — guard must still fire because parent isn't ready.
+		const c1 = makeTicket({
+			id: "child001",
+			type: "chore",
+			state: "done",
+			resolution: {
+				commit: "0".repeat(40),
+				resolved_at: new Date().toISOString(),
+				resolved_by: "test",
+			},
+			relationships: { parent: "parent01" },
+		});
+		const c2 = makeTicket({
+			id: "child002",
+			type: "chore",
+			state: "open",
+			relationships: { parent: "parent01" },
+		});
+		writeTicket(dir, c1);
+		writeTicket(dir, c2);
+		const parent = makeTicket({
+			id: "parent01",
+			type: "feature",
+			state: "active",
+			work: {
+				branch: "todo/parent01",
+				base_branch: "main",
+				started_at: new Date().toISOString(),
+				started_by: "test",
+			},
+			relationships: { children: ["child001", "child002"] },
+		});
+		writeTicket(dir, parent);
+
+		git(dir, ["checkout", "-b", "todo/parent01"]);
+		writeFileSync(join(dir, "code.txt"), "x", "utf8");
+		git(dir, ["add", "code.txt"]);
+		git(dir, ["commit", "-m", "todo:child001 — work"]);
+
+		const res = todoCli(dir, [
+			"close",
+			"parent01",
+			"--note",
+			"premature",
+		]);
+		expect(res.status).toBe(1);
+		expect(res.stderr).toContain("todo:parent01");
+	});
+
+	it("parent close STILL refuses when HEAD is on the wrong branch", () => {
+		// Branch-match check fires even for fully-closed parents.
+		const child = makeTicket({
+			id: "child001",
+			type: "chore",
+			state: "done",
+			resolution: {
+				commit: "0".repeat(40),
+				resolved_at: new Date().toISOString(),
+				resolved_by: "test",
+			},
+			relationships: { parent: "parent01" },
+		});
+		writeTicket(dir, child);
+		const parent = makeTicket({
+			id: "parent01",
+			type: "feature",
+			state: "active",
+			work: {
+				branch: "todo/parent01",
+				base_branch: "main",
+				started_at: new Date().toISOString(),
+				started_by: "test",
+			},
+			relationships: { children: ["child001"] },
+		});
+		writeTicket(dir, parent);
+		// Stay on main; do NOT switch to todo/parent01.
+
+		const res = todoCli(dir, [
+			"close",
+			"parent01",
+			"--note",
+			"All done",
+		]);
+		expect(res.status).toBe(1);
+		expect(res.stderr).toContain("todo/parent01");
 	});
 });
 
