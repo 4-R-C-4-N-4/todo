@@ -99,14 +99,26 @@ git add .todo/
 git commit -m "todo:<id> — close"
 ```
 
-### 8. Merge back to main
+### 8. Open a PR (default)
+```bash
+todo pr
+```
+Pushes the branch to `origin` and opens a GitHub PR via `gh pr create`. The title comes from the ticket's summary; the body bundles the description, children's resolution notes (for parent tickets), and the resolution. If a PR already exists for the branch, `todo pr` updates it in place. **The agent stops here.** A human reviews on GitHub and clicks Merge.
+
+This requires the `gh` CLI authenticated (`gh auth login`) and a configured remote. See `BIBLE.md` → "Branch Protection (recommended)" for the GitHub settings that make this flow safe.
+
+#### Fallback: local merge
+
+When `gh` isn't available, or you're working solo on an unprotected repo and want speed over review, merge locally instead:
+
 ```bash
 git checkout main
 git merge --no-ff todo/<id>
 git branch -d todo/<id>
+git push
 ```
 
-**Use `--no-ff`, never squash.** Squash replaces commit SHAs — the resolution commit stored in the ticket points at an orphaned commit that `git gc` will eventually delete.
+**Use `--no-ff`, never squash.** Squash replaces commit SHAs — the resolution commit stored in the ticket points at an orphaned commit that `git gc` will eventually delete. The same rule applies on the GitHub side: in branch protection, enable "Require linear history" so squash merges aren't even an option.
 
 ## Done Contract Quick Reference
 
@@ -136,7 +148,12 @@ todo work <next-child-id>
 # Close parent when all children are done
 todo close <parent-id> --note "All tasks complete."
 git add .todo/ && git commit -m "todo:<parent-id> — close"
-git checkout main && git merge --no-ff todo/<parent-id>
+
+# Open the PR for the whole feature (default) ...
+todo pr
+
+# ... or merge locally (fallback)
+# git checkout main && git merge --no-ff todo/<parent-id>
 ```
 
 ## Common Mistakes

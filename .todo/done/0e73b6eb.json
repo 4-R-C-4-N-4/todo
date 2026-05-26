@@ -1,13 +1,13 @@
 {
   "id": "0e73b6eb",
   "type": "feature",
-  "state": "open",
+  "state": "done",
   "summary": "Default the close→merge step to opening a PR instead of merging local main",
   "source": {
     "type": "human"
   },
   "created_at": "2026-05-26T02:25:25.873Z",
-  "updated_at": "2026-05-26T02:25:25.973Z",
+  "updated_at": "2026-05-26T17:46:03.147Z",
   "tags": [
     "workflow",
     "pr",
@@ -19,5 +19,17 @@
       "ed3efe3e",
       "7b2279c7"
     ]
+  },
+  "work": {
+    "branch": "todo/0e73b6eb",
+    "base_branch": "main",
+    "started_at": "2026-05-26T17:41:21.342Z",
+    "started_by": "anonlessness"
+  },
+  "resolution": {
+    "commit": "e76c78dd197f881f5f2e70c504e7187b63a8b423",
+    "resolved_at": "2026-05-26T17:46:03.147Z",
+    "resolved_by": "unknown",
+    "note": "PR-by-default workflow shipped: 'todo pr' command (ed3efe3e) + /todo-implement skill step 8 update (7b2279c7). Local-merge stays as a documented fallback. Branch-protection guidance from earlier BIBLE.md ticket now has a real command to point at."
   }
 }

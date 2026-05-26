@@ -53,6 +53,8 @@ git commit -m "todo:<id> — close"
 
 This is non-negotiable. The linked commit is the proof mechanism.
 
+After closing, `todo-implement` step 8 opens a GitHub PR via `todo pr` (the default) and stops, leaving the merge as a human gate. The local-merge sequence is documented as a fallback for unprotected repos or when `gh` isn't available.
+
 ## Hermes Integration
 
 Load a skill by name in your Hermes session or cron job. Skills follow the
