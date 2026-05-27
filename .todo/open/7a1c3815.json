@@ -1,0 +1,21 @@
+{
+  "id": "7a1c3815",
+  "type": "chore",
+  "state": "open",
+  "summary": "Bump npm package to 0.1.6 to publish parent-aware branch guard + todo pr command",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T18:42:10.593Z",
+  "updated_at": "2026-05-27T18:42:10.630Z",
+  "files": [
+    {
+      "path": "package.json"
+    }
+  ],
+  "tags": [
+    "release",
+    "npm"
+  ],
+  "description": "Two user-facing changes are on main but not yet on npm:\n- Parent-aware branch guard (commit 0baf2a2): closes parents without\n  --force when all children are terminal.\n- New 'todo pr' command (commit b68e9f2): push + gh pr create with\n  ticket-derived title/body, replaces local merge as the default close\n  flow.\n\nUntil 0.1.6 is published, agents in other repos hit the OLD global\n0.1.5 — they still --force parent closes and have no 'todo pr'.\n\nSteps (user-driven; agent cannot publish):\n1. Bump version in package.json from 0.1.5 → 0.1.6\n2. Commit ('chore: bump to 0.1.6')\n3. Tag v0.1.6 and push tag (the release workflow handles the npm publish)\n4. After publish, run 'npm i -g @4-r-c-4-n-4/todo@latest' so the local\n   global picks up the new build\n\nDone contract: package.json shows 0.1.6; v0.1.6 release exists on\ngithub.com/4-R-C-4-N-4/todo/releases; 'todo --version' on the global\ninstall prints 0.1.6 and 'todo --help' shows the 'pr' command."
+}
