@@ -1,0 +1,27 @@
+{
+  "id": "b9b6541c",
+  "type": "feature",
+  "state": "done",
+  "summary": "Add behavior.branch_mode config (per-ticket | managed); managed skips git ops and branch guards",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T21:27:46.720Z",
+  "updated_at": "2026-05-27T21:36:11.471Z",
+  "tags": [
+    "config",
+    "branch-mode"
+  ],
+  "relationships": {
+    "parent": "a8d6e8e9"
+  },
+  "description": "behavior currently holds only commit_prefix (src/config.ts) and branch enforcement is hardcoded via expectedBranchFor. Add behavior.branch_mode = per-ticket | managed. In managed mode, work behaves as --skip-branch (no git ops) and close skips checkOnExpectedBranch + checkBranchHasTodoCommit entirely. One coherent switch instead of a per-command --skip-branch tax. Do NOT add a flag per guard. Files: src/config.ts, src/types.ts (Config), src/commands/work.ts, src/commands/close.ts.",
+  "resolution": {
+    "commit": "c8def14ea1c41c3d0a44224d72e2a62052d544f8",
+    "resolved_at": "2026-05-27T21:36:11.471Z",
+    "resolved_by": "unknown",
+    "test_file": "tests/config.test.ts",
+    "test_function": "getBranchMode",
+    "note": "branch_mode config (per-ticket default | managed) wired into work (skip git ops) and close (skip guards + auto commit-state). Verified end-to-end: managed mode closed a ticket whose commit had no todo: prefix, on a user-owned branch, without switching branches."
+  }
+}
