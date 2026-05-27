@@ -175,6 +175,27 @@ describe('validateTransition - done contract', () => {
     ).not.toThrow();
   });
 
+  it('investigation: a resolution note satisfies the contract (no commit needed)', () => {
+    const t = makeTicket({ type: 'investigation', state: 'open' });
+    expect(() =>
+      validateTransition(t, 'done', { note: 'Concluded: clustering belongs in the loader. See docs/adr-7.md' }, tmpDir)
+    ).not.toThrow();
+  });
+
+  it('investigation: missing note throws even with a commit', () => {
+    const t = makeTicket({ type: 'investigation', state: 'open' });
+    expect(() =>
+      validateTransition(t, 'done', { commit: realCommit }, tmpDir)
+    ).toThrow(/note/i);
+  });
+
+  it('investigation: a provided commit must still exist', () => {
+    const t = makeTicket({ type: 'investigation', state: 'open' });
+    expect(() =>
+      validateTransition(t, 'done', { note: 'conclusion', commit: '0'.repeat(40) }, tmpDir)
+    ).toThrow(/does not exist/i);
+  });
+
   it('done: missing commit throws', () => {
     const t = makeTicket({ type: 'refactor', state: 'open' });
     expect(() =>
