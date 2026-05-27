@@ -1,0 +1,26 @@
+{
+  "id": "b7903812",
+  "type": "feature",
+  "state": "done",
+  "summary": "Add todo doctor / reconcile command to detect committed .todo/ state that contradicts reality",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T21:27:46.888Z",
+  "updated_at": "2026-05-27T21:46:45.752Z",
+  "tags": [
+    "tooling"
+  ],
+  "relationships": {
+    "parent": "a8d6e8e9"
+  },
+  "description": "Add a todo doctor / reconcile command that detects committed .todo/ state contradicting reality: ticket=done but resolution.commit unreachable from HEAD, ticket=active but branch gone, etc. Turns silent desync into a surfaced, fixable report; a safety net for state that lives in git and is edited by agents. New command under src/commands/, registered in src/cli.ts.",
+  "resolution": {
+    "commit": "145834fa3bad849fa7baff6a0d7ca074da44cffe",
+    "resolved_at": "2026-05-27T21:46:45.752Z",
+    "resolved_by": "unknown",
+    "test_file": "tests/commands/doctor.test.ts",
+    "test_function": "collectIssues",
+    "note": "todo doctor reconciles .todo/ against git reality (missing/unreachable resolution commits, done-parent-with-open-child, deleted active branches, misfiled tickets, dangling refs). Verified clean on this repo and exit-1 on a broken store."
+  }
+}
