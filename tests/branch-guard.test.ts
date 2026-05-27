@@ -294,7 +294,7 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		expect(res.stderr).toContain("todo work");
 	});
 
-	it("refuses to close when no commit has todo:<id>", () => {
+	it("warns but proceeds when no commit has todo:<id> (advisory)", () => {
 		const t = makeTicket({
 			id: "abc12345",
 			type: "chore",
@@ -313,8 +313,43 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		git(dir, ["commit", "-m", "unprefixed"]);
 
 		const res = todoCli(dir, ["close", "abc12345", "--note", "wip"]);
-		expect(res.status).toBe(1);
+		expect(res.status).toBe(0);
+		expect(res.stderr).toContain("Warning");
 		expect(res.stderr).toContain("todo:abc12345");
+		expect(res.stdout).toContain("Closed abc12345");
+	});
+
+	it("--commit <sha> satisfies the commit-prefix grep (no warning)", () => {
+		const t = makeTicket({
+			id: "abc12345",
+			type: "chore",
+			state: "active",
+			work: {
+				branch: "todo/abc12345",
+				base_branch: "main",
+				started_at: new Date().toISOString(),
+				started_by: "test",
+			},
+		});
+		writeTicket(dir, t);
+		git(dir, ["checkout", "-b", "todo/abc12345"]);
+		writeFileSync(join(dir, "code.txt"), "x", "utf8");
+		git(dir, ["add", "code.txt"]);
+		// Deliverable rode an unprefixed commit (e.g. a differently-tagged change).
+		git(dir, ["commit", "-m", "concept-hierarchy: notes doc"]);
+		const sha = git(dir, ["rev-parse", "HEAD"]).trim();
+
+		const res = todoCli(dir, [
+			"close",
+			"abc12345",
+			"--commit",
+			sha,
+			"--note",
+			"deliverable rode a non-todo commit",
+		]);
+		expect(res.status).toBe(0);
+		// Explicit --commit means the grep is skipped — no advisory warning.
+		expect(res.stderr).not.toContain("Warning");
 	});
 
 	it("--force bypasses both guards", () => {
@@ -387,8 +422,9 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		expect(res.stderr).not.toContain("--force");
 	});
 
-	it("parent close STILL refuses when a child is open (commit-prefix check fires)", () => {
-		// One open child — guard must still fire because parent isn't ready.
+	it("parent close STILL refuses when a child is open (state machine blocks)", () => {
+		// One open child — the state machine refuses parent->done regardless of
+		// the now-advisory commit-prefix grep.
 		const c1 = makeTicket({
 			id: "child001",
 			type: "chore",
@@ -434,7 +470,7 @@ describe("CLI close — branch guards (end-to-end)", () => {
 			"premature",
 		]);
 		expect(res.status).toBe(1);
-		expect(res.stderr).toContain("todo:parent01");
+		expect(res.stderr).toContain("child ticket(s) still open");
 	});
 
 	it("parent close STILL refuses when HEAD is on the wrong branch", () => {

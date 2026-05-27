@@ -1,0 +1,26 @@
+{
+  "id": "1872233e",
+  "type": "refactor",
+  "state": "done",
+  "summary": "Demote checkBranchHasTodoCommit to advisory; let --commit <sha> satisfy it, keep done-contract hard",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T21:27:46.758Z",
+  "updated_at": "2026-05-27T21:40:38.129Z",
+  "tags": [
+    "guards"
+  ],
+  "relationships": {
+    "parent": "a8d6e8e9"
+  },
+  "description": "checkBranchHasTodoCommit (src/branch-guard.ts) greps commit messages for todo:<id> and hard-fails on a false negative when the deliverable rides a differently-prefixed commit. Let close --commit <sha> satisfy the guard, or downgrade the grep to a warning. Keep the real done-contract hard (commit-exists + test/note in src/state.ts). Files: src/branch-guard.ts, src/commands/close.ts.",
+  "resolution": {
+    "commit": "88f78ff555403a48671d4904a90b1e3a01db8bde",
+    "resolved_at": "2026-05-27T21:40:38.129Z",
+    "resolved_by": "unknown",
+    "test_file": "tests/branch-guard.test.ts",
+    "test_function": "CLI close — branch guards (end-to-end)",
+    "note": "Commit-prefix grep is now advisory (warn + proceed); --commit <sha> bypasses it. Verified via e2e CLI tests + full suite."
+  }
+}
