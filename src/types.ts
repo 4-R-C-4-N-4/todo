@@ -1,6 +1,15 @@
 // Phase 1: All type definitions for the todo CLI tool
 
-export type TicketType = "bug" | "feature" | "refactor" | "chore" | "debt";
+export type TicketType =
+	| "bug"
+	| "feature"
+	| "refactor"
+	| "chore"
+	| "debt"
+	// Investigation/decision: the deliverable is a documented conclusion
+	// (an analysis trail + a note), not a code change. Closes on a note
+	// rather than a test or code commit. See the done contract in state.ts.
+	| "investigation";
 export type State =
 	| "open"
 	| "active"

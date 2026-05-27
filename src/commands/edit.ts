@@ -10,6 +10,7 @@ const VALID_TYPES: TicketType[] = [
 	"refactor",
 	"chore",
 	"debt",
+	"investigation",
 ];
 
 export function registerEdit(program: Command): void {

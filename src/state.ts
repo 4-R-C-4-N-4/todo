@@ -87,6 +87,20 @@ export function validateTransition(
 				);
 			}
 			// commit is optional for parent (defaults to HEAD — caller handles HEAD resolution)
+		} else if (ticket.type === "investigation") {
+			// Investigation/decision: the deliverable is a documented conclusion,
+			// not a code change. Require a resolution note (the conclusion, which
+			// should reference any doc/finding). A commit is optional — close
+			// still defaults it to HEAD for provenance — but if one is given it
+			// must exist.
+			if (!params.note) {
+				throw new Error(
+					`Investigation ticket requires a resolution note (the documented conclusion)`,
+				);
+			}
+			if (commit && !commitExists(commit, repoRoot)) {
+				throw new Error(`Commit '${commit}' does not exist in the repository`);
+			}
 		} else {
 			// Non-parent: commit always required
 			if (!commit) {

@@ -18,6 +18,7 @@ const VALID_TYPES: TicketType[] = [
 	"refactor",
 	"chore",
 	"debt",
+	"investigation",
 ];
 const VALID_SOURCES: SourceType[] = [
 	"log",
@@ -33,7 +34,7 @@ export function registerNew(program: Command): void {
 		.description("Create a new ticket")
 		.option(
 			"-t, --type <type>",
-			"ticket type: bug|feature|refactor|chore|debt",
+			"ticket type: bug|feature|refactor|chore|debt|investigation",
 			"chore",
 		)
 		.option(

@@ -14,6 +14,7 @@ const VALID_TYPES: TicketType[] = [
 	"refactor",
 	"chore",
 	"debt",
+	"investigation",
 ];
 
 export function registerScan(program: Command): void {
