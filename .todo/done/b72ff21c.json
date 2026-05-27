@@ -1,0 +1,35 @@
+{
+  "id": "b72ff21c",
+  "type": "feature",
+  "state": "done",
+  "summary": "Refuse parent → done state transition when any child is still open",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T18:42:10.661Z",
+  "updated_at": "2026-05-27T18:58:03.469Z",
+  "files": [
+    {
+      "path": "src/state.ts"
+    }
+  ],
+  "tags": [
+    "state-machine",
+    "parent"
+  ],
+  "description": "src/state.ts already detects parent tickets (lines 54 and 133 check\nrelationships.children.length > 0) but does not enforce that all children\nare in a terminal state before letting the parent transition to done.\n\nToday only the branch guard catches half-baked parent closes — and only\nwhen no commit on the branch contains 'todo:<parent>'. If someone happens\nto have such a commit (e.g., the 'plan: N subtasks' commit on the branch),\nthe parent could close with open children. A state-machine rule closes\nthat gap.\n\nFix: in applyTransition for targetState='done', when isParent is true,\nread each child via readTicket(repoRoot, childId) and throw if any are\nNOT in TERMINAL_STATES. Use the existing TERMINAL_STATES export from\nticket.ts. Error message should name the still-open children so the\noperator knows what to finish.\n\nDone contract: tests/state.test.ts gains coverage for (a) parent close\nfails when ≥1 child is open/active/blocked, (b) parent close succeeds\nwhen every child is terminal, (c) no regression on single-ticket close.\nError message lists open child ids.\n\nRelated: f33e500d (branch guard for the same case) — this is the\nbelt-and-suspenders layer.",
+  "work": {
+    "branch": "todo/b72ff21c",
+    "base_branch": "main",
+    "started_at": "2026-05-27T18:56:37.469Z",
+    "started_by": "anonlessness"
+  },
+  "resolution": {
+    "commit": "97959393fb3717f8688503c64a4aaf777ec2fc5c",
+    "resolved_at": "2026-05-27T18:58:03.469Z",
+    "resolved_by": "unknown",
+    "test_file": "tests/state.test.ts",
+    "test_function": "parent ticket: refuses when at least one child is still open",
+    "note": "validateTransition enforces all-children-terminal for parent close. Error message lists open child ids with their state. Missing child files also block. 5 new tests, 192 passing."
+  }
+}
