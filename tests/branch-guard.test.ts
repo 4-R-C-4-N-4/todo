@@ -21,10 +21,17 @@ import {
 	removeTempDir,
 } from "./helpers.js";
 
-function writeConfig(dir: string): void {
+function writeConfig(
+	dir: string,
+	behavior: Record<string, unknown> = {},
+): void {
+	const cfg = {
+		...DEFAULT_CONFIG,
+		behavior: { ...DEFAULT_CONFIG.behavior, ...behavior },
+	};
 	writeFileSync(
 		join(dir, ".todo", "config.json"),
-		JSON.stringify(DEFAULT_CONFIG, null, 2),
+		JSON.stringify(cfg, null, 2),
 		"utf8",
 	);
 }
@@ -274,7 +281,30 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		removeTempDir(dir);
 	});
 
-	it("refuses to close from main", () => {
+	it("warns but proceeds when closing from the wrong branch (advisory default)", () => {
+		const t = makeTicket({
+			id: "abc12345",
+			type: "chore",
+			state: "active",
+			work: {
+				branch: "todo/abc12345",
+				base_branch: "main",
+				started_at: new Date().toISOString(),
+				started_by: "test",
+			},
+		});
+		writeTicket(dir, t);
+
+		// Stay on main (wrong branch). Default guard_mode is advisory.
+		const res = todoCli(dir, ["close", "abc12345", "--note", "wip"]);
+		expect(res.status).toBe(0);
+		expect(res.stderr).toContain("Warning");
+		expect(res.stderr).toContain("todo/abc12345");
+		expect(res.stdout).toContain("Closed abc12345");
+	});
+
+	it("refuses to close from the wrong branch under guard_mode=strict", () => {
+		writeConfig(dir, { guard_mode: "strict" });
 		const t = makeTicket({
 			id: "abc12345",
 			type: "chore",
@@ -292,6 +322,30 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		expect(res.status).toBe(1);
 		expect(res.stderr).toContain("todo/abc12345");
 		expect(res.stderr).toContain("todo work");
+	});
+
+	it("hard-fails the commit-prefix grep under guard_mode=strict", () => {
+		writeConfig(dir, { guard_mode: "strict" });
+		const t = makeTicket({
+			id: "abc12345",
+			type: "chore",
+			state: "active",
+			work: {
+				branch: "todo/abc12345",
+				base_branch: "main",
+				started_at: new Date().toISOString(),
+				started_by: "test",
+			},
+		});
+		writeTicket(dir, t);
+		git(dir, ["checkout", "-b", "todo/abc12345"]); // correct branch
+		writeFileSync(join(dir, "code.txt"), "x", "utf8");
+		git(dir, ["add", "code.txt"]);
+		git(dir, ["commit", "-m", "unprefixed"]); // no todo:<id> prefix
+
+		const res = todoCli(dir, ["close", "abc12345", "--note", "wip"]);
+		expect(res.status).toBe(1);
+		expect(res.stderr).toContain("todo:abc12345");
 	});
 
 	it("warns but proceeds when no commit has todo:<id> (advisory)", () => {
@@ -473,8 +527,9 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		expect(res.stderr).toContain("child ticket(s) still open");
 	});
 
-	it("parent close STILL refuses when HEAD is on the wrong branch", () => {
-		// Branch-match check fires even for fully-closed parents.
+	it("parent close refuses on the wrong branch under guard_mode=strict", () => {
+		// Branch-match check fires even for fully-closed parents — when strict.
+		writeConfig(dir, { guard_mode: "strict" });
 		const child = makeTicket({
 			id: "child001",
 			type: "chore",
@@ -510,6 +565,40 @@ describe("CLI close — branch guards (end-to-end)", () => {
 		]);
 		expect(res.status).toBe(1);
 		expect(res.stderr).toContain("todo/parent01");
+	});
+
+	it("parent close on the wrong branch is advisory by default (succeeds)", () => {
+		// Same setup, default guard_mode: warns about the branch but proceeds.
+		const child = makeTicket({
+			id: "child001",
+			type: "chore",
+			state: "done",
+			resolution: {
+				commit: "0".repeat(40),
+				resolved_at: new Date().toISOString(),
+				resolved_by: "test",
+			},
+			relationships: { parent: "parent01" },
+		});
+		writeTicket(dir, child);
+		const parent = makeTicket({
+			id: "parent01",
+			type: "feature",
+			state: "active",
+			work: {
+				branch: "todo/parent01",
+				base_branch: "main",
+				started_at: new Date().toISOString(),
+				started_by: "test",
+			},
+			relationships: { children: ["child001"] },
+		});
+		writeTicket(dir, parent);
+
+		const res = todoCli(dir, ["close", "parent01", "--note", "All done"]);
+		expect(res.status).toBe(0);
+		expect(res.stderr).toContain("Warning");
+		expect(res.stdout).toContain("Closed parent01");
 	});
 });
 

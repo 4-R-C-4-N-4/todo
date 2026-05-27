@@ -1,13 +1,13 @@
 {
   "id": "a8d6e8e9",
   "type": "feature",
-  "state": "open",
+  "state": "done",
   "summary": "Decouple the work-tracker from the git-workflow enforcer",
   "source": {
     "type": "agent"
   },
   "created_at": "2026-05-27T21:26:48.962Z",
-  "updated_at": "2026-05-27T21:27:46.927Z",
+  "updated_at": "2026-05-27T21:52:06.033Z",
   "description": "Two products are welded together: a work tracker (state + rationale + done-contract) and a git-workflow enforcer (branch-per-ticket, todo: commit grep, branch guards). The tracker is the differentiation; the enforcer narrows addressable workflows and should become optional. Children decouple the two so the tracker stands alone. Source: large-project usage feedback, 2026-05-27. Reference files: src/branch-guard.ts, src/config.ts, src/commands/close.ts, src/commands/work.ts, src/state.ts, src/types.ts.",
   "relationships": {
     "children": [
@@ -19,5 +19,11 @@
       "b7903812",
       "205a536b"
     ]
+  },
+  "resolution": {
+    "commit": "fefd5cf443670f5152ae40c447cf8b06ef7961ed",
+    "resolved_at": "2026-05-27T21:52:06.033Z",
+    "resolved_by": "unknown",
+    "note": "Decoupled the work-tracker from the git-workflow enforcer. All 7 subtasks shipped: atomic close-and-record (--commit-state), branch_mode (per-ticket|managed), advisory commit-prefix grep + --commit, investigation ticket type, relaxed no-squash rule for .todo/-only commits, todo doctor reconcile command, and advisory-by-default guard polarity with strict opt-in."
   }
 }

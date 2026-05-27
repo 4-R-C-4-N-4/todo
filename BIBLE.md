@@ -155,6 +155,25 @@ Once protected, the closing step becomes `todo pr` (push branch + open PR + stop
 
 ---
 
+## Configuration
+
+Settings live in `.todo/config.json` (created by `todo init`). The keys that shape the git workflow:
+
+| Key | Values | Default | Effect |
+|-----|--------|---------|--------|
+| `behavior.commit_prefix` | string | `todo:` | Prefix that ties commits to tickets |
+| `behavior.branch_mode` | `per-ticket` \| `managed` | `per-ticket` | `per-ticket`: todo manages a `todo/<id>` branch and runs the branch guards. `managed`: **you** (or a PR flow) own branching — `todo work` does no git ops and `todo close` drops the branch guards and auto-records state |
+| `behavior.guard_mode` | `advisory` \| `strict` | `advisory` | `advisory`: a failed branch/commit-prefix guard warns and proceeds. `strict`: it's a hard error (exit 1) — opt in when you want git to enforce the conventions |
+
+**Pick a profile:**
+- **PR-based / protected `main`** → `branch_mode: "managed"`. todo becomes a pure state-and-rationale tracker and leaves git entirely to you.
+- **Agent-driven, todo owns the branches** → `branch_mode: "per-ticket"` + `guard_mode: "strict"` (this repo's own setting) to make the conventions enforced rather than suggested.
+- **Default** (`per-ticket` + `advisory`) suits solo/local work: the structure is there, but a guard never blocks you.
+
+`todo doctor` reconciles committed `.todo/` state against git reality (missing/unreachable resolution commits, done-parents with open children, active tickets whose branch is gone, misfiled tickets, dangling references). Run it in CI — it exits non-zero on errors (`--strict` also fails on warnings).
+
+---
+
 ## Ticket Types
 
 | Type | When to use |
@@ -164,6 +183,7 @@ Once protected, the closing step becomes `todo pr` (push branch + open PR + stop
 | `refactor` | Code change with no behavior change |
 | `chore` | Tooling, config, dependency updates, cleanup |
 | `debt` | Known-bad code that needs to be addressed later |
+| `investigation` | A question to answer or decision to make; the deliverable is a documented conclusion, not code |
 
 ---
 
@@ -178,8 +198,11 @@ What's required before closing each ticket type:
 | `refactor` | Commit SHA, tests still passing |
 | `chore` | Commit SHA |
 | `debt` | Commit SHA, note explaining what changed |
+| `investigation` | A resolution **note** (the conclusion); commit optional, no test required |
 
 Close command: `todo close <id> --note "what you did" --test tests/foo.ts::test_name`
+
+`todo close --commit-state` records the `.todo/` state change in the same step, so a failed close can never be followed by a stray "close" commit. It's the recommended way to close.
 
 ---
 

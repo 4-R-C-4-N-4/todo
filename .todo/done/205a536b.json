@@ -1,0 +1,31 @@
+{
+  "id": "205a536b",
+  "type": "refactor",
+  "state": "done",
+  "summary": "Invert guard polarity: advisory-by-default with a strict opt-in",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T21:27:46.927Z",
+  "updated_at": "2026-05-27T21:51:44.207Z",
+  "tags": [
+    "guards",
+    "dx"
+  ],
+  "relationships": {
+    "parent": "a8d6e8e9",
+    "depends_on": [
+      "b9b6541c",
+      "1872233e"
+    ]
+  },
+  "description": "The branch-guard.ts header justifies hard exit codes by noting agents follow exit codes better than prose - correct for the agent-author but wrong as a product default across diverse human workflows. Make guards warn by default; a strict / per-ticket project opts back into hard exit codes. Depends on P1 (branch_mode) and P2 (advisory grep) landing first. Files: src/branch-guard.ts, src/commands/close.ts, src/commands/work.ts.",
+  "resolution": {
+    "commit": "5287ed796e813b69dc53012ab79570dda81ee627",
+    "resolved_at": "2026-05-27T21:51:44.207Z",
+    "resolved_by": "unknown",
+    "test_file": "tests/branch-guard.test.ts",
+    "test_function": "refuses to close from the wrong branch under guard_mode=strict",
+    "note": "Guards are advisory by default (warn+proceed); guard_mode=strict re-hardens them. Verified advisory vs strict end-to-end. This repo opts into strict to keep its own discipline."
+  }
+}

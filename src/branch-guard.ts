@@ -1,8 +1,13 @@
 // Branch-convention guards used by `todo close` and `todo work`.
 //
-// These turn the conventions documented in the todo-implement skill into
-// hard preconditions: agents follow exit codes far more reliably than
-// prose, so every drift gets a clear, actionable error.
+// These encode the conventions documented in the todo-implement skill. They
+// are *advisory by default* — the caller warns and proceeds — because a
+// standalone tool should not litigate a branching workflow its user did not
+// choose. A project that wants git to enforce the conventions opts in with
+// behavior.guard_mode = "strict", which turns these into hard preconditions
+// (agents follow exit codes far more reliably than prose). managed branch_mode
+// skips them entirely. Each function therefore just *reports* a check result;
+// the severity decision lives in the command.
 
 import {
 	getCommitMessagesBetween,

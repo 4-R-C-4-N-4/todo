@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   loadConfig,
   getBranchMode,
+  getGuardMode,
   getCommitPrefix,
   DEFAULT_CONFIG,
 } from '../src/config.js';
@@ -33,6 +34,23 @@ describe('getBranchMode', () => {
 
   it('returns managed when configured', () => {
     expect(getBranchMode({ behavior: { branch_mode: 'managed' } })).toBe('managed');
+  });
+});
+
+describe('getGuardMode', () => {
+  it('defaults to advisory when unset', () => {
+    expect(getGuardMode(DEFAULT_CONFIG)).toBe('advisory');
+    expect(getGuardMode({})).toBe('advisory');
+    expect(getGuardMode({ behavior: {} })).toBe('advisory');
+  });
+
+  it('returns strict when configured', () => {
+    expect(getGuardMode({ behavior: { guard_mode: 'strict' } })).toBe('strict');
+  });
+
+  it('reads guard_mode from .todo/config.json', () => {
+    writeConfig({ behavior: { guard_mode: 'strict' } });
+    expect(getGuardMode(loadConfig(tmpDir))).toBe('strict');
   });
 });
 

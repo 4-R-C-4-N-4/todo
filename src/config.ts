@@ -2,11 +2,15 @@
 
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { BranchMode, Config } from "./types.js";
+import type { BranchMode, Config, GuardMode } from "./types.js";
 
 export const DEFAULT_CONFIG: Config = {
 	project: { name: "" },
-	behavior: { commit_prefix: "todo:", branch_mode: "per-ticket" },
+	behavior: {
+		commit_prefix: "todo:",
+		branch_mode: "per-ticket",
+		guard_mode: "advisory",
+	},
 	intake: {
 		dedup_strategy: "fingerprint",
 		scan_patterns: ["TODO", "FIXME", "HACK", "XXX"],
@@ -88,4 +92,8 @@ export function getCommitPrefix(config: Config): string {
 
 export function getBranchMode(config: Config): BranchMode {
 	return config.behavior?.branch_mode ?? "per-ticket";
+}
+
+export function getGuardMode(config: Config): GuardMode {
+	return config.behavior?.guard_mode ?? "advisory";
 }

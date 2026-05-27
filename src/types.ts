@@ -19,6 +19,10 @@ export type State =
 	| "duplicate";
 export type SourceType = "log" | "test" | "agent" | "human" | "comment";
 export type BranchMode = "per-ticket" | "managed";
+// How branch-convention guards behave when they fail. "advisory" (default):
+// warn and proceed. "strict": hard error (exit 1), the old behavior — opt in
+// when you want git to enforce the conventions.
+export type GuardMode = "advisory" | "strict";
 export type AnalysisType = "blame" | "hypothesis" | "evidence" | "conclusion";
 
 // Discriminated union on `type`
@@ -106,10 +110,14 @@ export interface Config {
 	behavior?: {
 		commit_prefix?: string;
 		// "per-ticket" (default): todo manages a todo/<id> branch per ticket and
-		// enforces the branch-convention guards. "managed": the user (or a PR
-		// flow) owns branching — `work` performs no git ops and `close` drops the
+		// runs the branch-convention guards. "managed": the user (or a PR flow)
+		// owns branching — `work` performs no git ops and `close` drops the
 		// branch guards entirely. See BranchMode.
 		branch_mode?: BranchMode;
+		// Whether failing branch-convention guards are advisory (warn, default)
+		// or strict (hard error). Ignored in managed branch_mode, which has no
+		// guards. See GuardMode.
+		guard_mode?: GuardMode;
 	};
 	intake?: {
 		dedup_strategy?: "fingerprint" | "file-line" | "semantic";
