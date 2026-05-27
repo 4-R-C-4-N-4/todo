@@ -1,12 +1,7 @@
 import { Command } from "commander";
 import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
-import {
-	branchExists,
-	commitExists,
-	isAncestor,
-	resolveHEAD,
-} from "../git.js";
+import { branchExists, commitExists, isAncestor, resolveHEAD } from "../git.js";
 import { listTickets, TERMINAL_STATES } from "../ticket.js";
 import type { Ticket } from "../types.js";
 

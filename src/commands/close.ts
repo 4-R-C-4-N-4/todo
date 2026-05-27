@@ -70,7 +70,10 @@ export function registerClose(program: Command): void {
 					// state.ts). An explicit --commit names the deliverable, so skip
 					// it; a parent with all children closed carries no commit of its
 					// own.
-					if (!opts.commit && !isParentWithAllChildrenClosed(ticket, repoRoot)) {
+					if (
+						!opts.commit &&
+						!isParentWithAllChildrenClosed(ticket, repoRoot)
+					) {
 						const commitCheck = checkBranchHasTodoCommit(
 							ticket,
 							repoRoot,
