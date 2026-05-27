@@ -52,18 +52,26 @@ export function registerClose(program: Command): void {
 						console.error(`Error: ${branchCheck.message}`);
 						process.exit(1);
 					}
-					// Parents with all-terminal children carry no code commit of
-					// their own — skip the commit-prefix check for them. The
-					// branch-match check above still fires.
-					if (!isParentWithAllChildrenClosed(ticket, repoRoot)) {
+					// Commit-prefix grep is advisory, not a gate: it is a heuristic
+					// over commit messages, whereas the real done-contract
+					// (commit-exists + test/note) is enforced in state.ts. An
+					// explicit --commit names the deliverable, so skip the grep;
+					// a parent with all children closed carries no commit of its
+					// own. Otherwise warn on a miss but proceed.
+					if (
+						!opts.commit &&
+						!isParentWithAllChildrenClosed(ticket, repoRoot)
+					) {
 						const commitCheck = checkBranchHasTodoCommit(
 							ticket,
 							repoRoot,
 							getCommitPrefix(config),
 						);
 						if (!commitCheck.ok) {
-							console.error(`Error: ${commitCheck.message}`);
-							process.exit(1);
+							console.error(
+								`Warning: ${commitCheck.message}\n` +
+									"  Proceeding anyway (advisory). Pass --commit <sha> to point close at the deliverable.",
+							);
 						}
 					}
 				} else if (opts.force) {

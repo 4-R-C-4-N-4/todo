@@ -51,10 +51,7 @@ export function checkBranchHasTodoCommit(
 	if (found) return { ok: true };
 	return {
 		ok: false,
-		message:
-			`Refusing to close ${ticket.id}: no commit since ${base} has message containing '${needle}'.\n` +
-			`  Either amend a commit to include the prefix, or pass --force ` +
-			`if this ticket genuinely has no code change attached.`,
+		message: `no commit since ${base} has a message containing '${needle}'.`,
 	};
 }
 
