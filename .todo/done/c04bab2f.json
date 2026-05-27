@@ -1,0 +1,25 @@
+{
+  "id": "c04bab2f",
+  "type": "chore",
+  "state": "done",
+  "summary": "Relax the no-squash rule for .todo/-only commits (resolution SHAs live in the ticket file)",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T21:27:46.848Z",
+  "updated_at": "2026-05-27T21:44:44.338Z",
+  "tags": [
+    "docs",
+    "git-history"
+  ],
+  "relationships": {
+    "parent": "a8d6e8e9"
+  },
+  "description": "The no-squash rule exists to preserve resolution SHAs, but those SHAs live inside the ticket file as resolution.commit, not in .todo/ commit history, so squashing .todo/-only commits loses nothing essential. Separate resolution provenance (in the file) from the transition log (open->active->done churn that pollutes main). Relax the rule and update docs. Files: BIBLE.md, skills/.",
+  "resolution": {
+    "commit": "4f2489096249701b3c83761a9a7ac0472c4b1046",
+    "resolved_at": "2026-05-27T21:44:44.338Z",
+    "resolved_by": "unknown",
+    "note": "Documented that the no-squash rule applies only to deliverable commits (resolution targets); .todo/-only state commits carry no reference and may be batched/squashed. Updated BIBLE.md, todo-implement SKILL.md, and design spec."
+  }
+}
