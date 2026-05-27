@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { checkWorkingTreeClean } from "../branch-guard.js";
+import { getBranchMode } from "../config.js";
 import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
 import {
@@ -32,10 +33,15 @@ export function registerWork(program: Command): void {
 		.option("--actor <name>", "override actor (also reads TODO_ACTOR env)")
 		.action((id: string, opts) => {
 			const ctx = getContext(true);
-			const { repoRoot } = ctx;
+			const { repoRoot, config } = ctx;
 
 			try {
 				const ticket = readTicketByPrefix(repoRoot, id);
+
+				// In managed branch_mode the user (or a PR flow) owns branching,
+				// so `work` performs no git ops — same as passing --skip-branch.
+				const skipBranch =
+					opts.skipBranch || getBranchMode(config) === "managed";
 
 				// Check not terminal
 				if (TERMINAL_STATES.includes(ticket.state)) {
@@ -74,7 +80,7 @@ export function registerWork(program: Command): void {
 				// Dirty-tree guard: refuse to leave a different todo/* branch
 				// with uncommitted work. We let `main`/other branches through —
 				// only the cross-ticket case is the one that loses work.
-				if (!opts.skipBranch) {
+				if (!skipBranch) {
 					let currentBranch = "";
 					try {
 						currentBranch = getCurrentBranch(repoRoot);
@@ -95,7 +101,7 @@ export function registerWork(program: Command): void {
 					}
 				}
 
-				if (opts.skipBranch) {
+				if (skipBranch) {
 					// --no-branch: orchestrator mode — activate on current branch without any git ops
 					const currentBranch = getCurrentBranch(repoRoot);
 					if (ticket.state !== "active") {

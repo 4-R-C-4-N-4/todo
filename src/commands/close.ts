@@ -4,7 +4,7 @@ import {
 	checkOnExpectedBranch,
 	isParentWithAllChildrenClosed,
 } from "../branch-guard.js";
-import { getCommitPrefix } from "../config.js";
+import { getBranchMode, getCommitPrefix } from "../config.js";
 import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
 import {
@@ -36,9 +36,11 @@ export function registerClose(program: Command): void {
 
 			try {
 				const ticket = readTicketByPrefix(repoRoot, id);
+				const managed = getBranchMode(config) === "managed";
 
-				// Branch-convention guards (skippable with --force).
-				if (!opts.force) {
+				// Branch-convention guards. Skipped entirely in managed mode (the
+				// user owns branching) or with --force.
+				if (!opts.force && !managed) {
 					let currentBranch = "";
 					try {
 						currentBranch = getCurrentBranch(repoRoot);
@@ -64,7 +66,7 @@ export function registerClose(program: Command): void {
 							process.exit(1);
 						}
 					}
-				} else {
+				} else if (opts.force) {
 					console.error("Warning: --force used; skipping branch guards.");
 				}
 
@@ -114,7 +116,7 @@ export function registerClose(program: Command): void {
 				// phantom-commit hazard of a manual `git commit` after a failed
 				// close. Runs before --checkout so the commit lands on the ticket
 				// branch before switching away.
-				if (opts.commitState) {
+				if (opts.commitState || managed) {
 					const message = `${getCommitPrefix(config)}${updated.id} — close`;
 					try {
 						commitTodoState(message, repoRoot);

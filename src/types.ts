@@ -9,6 +9,7 @@ export type State =
 	| "wontfix"
 	| "duplicate";
 export type SourceType = "log" | "test" | "agent" | "human" | "comment";
+export type BranchMode = "per-ticket" | "managed";
 export type AnalysisType = "blame" | "hypothesis" | "evidence" | "conclusion";
 
 // Discriminated union on `type`
@@ -93,7 +94,14 @@ export interface HermesConfig {
 
 export interface Config {
 	project?: { name?: string };
-	behavior?: { commit_prefix?: string };
+	behavior?: {
+		commit_prefix?: string;
+		// "per-ticket" (default): todo manages a todo/<id> branch per ticket and
+		// enforces the branch-convention guards. "managed": the user (or a PR
+		// flow) owns branching — `work` performs no git ops and `close` drops the
+		// branch guards entirely. See BranchMode.
+		branch_mode?: BranchMode;
+	};
 	intake?: {
 		dedup_strategy?: "fingerprint" | "file-line" | "semantic";
 		scan_patterns?: string[];
