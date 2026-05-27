@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { registerAnalyze } from "./commands/analyze.js";
 import { registerClose } from "./commands/close.js";
 import { registerDedup } from "./commands/dedup.js";
+import { registerDoctor } from "./commands/doctor.js";
 import { registerEdit } from "./commands/edit.js";
 import { registerExport } from "./commands/export.js";
 import { registerInit } from "./commands/init.js";
@@ -49,5 +50,6 @@ registerDedup(program);
 registerInstallHooks(program);
 registerSync(program);
 registerPr(program);
+registerDoctor(program);
 
 program.parse(process.argv);
