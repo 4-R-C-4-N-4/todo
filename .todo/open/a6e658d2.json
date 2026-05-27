@@ -1,0 +1,19 @@
+{
+  "id": "a6e658d2",
+  "type": "feature",
+  "state": "open",
+  "summary": "Atomic close-and-record: close commits .todo/ itself to kill the phantom-commit hazard",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-05-27T21:27:46.677Z",
+  "updated_at": "2026-05-27T21:27:46.967Z",
+  "tags": [
+    "close",
+    "git-safety"
+  ],
+  "relationships": {
+    "parent": "a8d6e8e9"
+  },
+  "description": "close currently writes the ticket file via writeTicket() but never commits .todo/; the skill prose tells the user to run git add .todo/ && git commit afterward. A failed close followed by a manual commit produces a phantom commit whose message says close over a still-open ticket. Make close stage and optionally commit .todo/ itself (e.g. --commit-state, default in managed mode) so close-and-record is atomic and the manual step cannot desync. P0 / highest priority: this is a correctness fix, not just ergonomics. File: src/commands/close.ts."
+}
