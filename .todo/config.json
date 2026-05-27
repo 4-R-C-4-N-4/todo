@@ -3,7 +3,9 @@
     "name": ""
   },
   "behavior": {
-    "commit_prefix": "todo:"
+    "commit_prefix": "todo:",
+    "branch_mode": "per-ticket",
+    "guard_mode": "strict"
   },
   "intake": {
     "dedup_strategy": "fingerprint",
