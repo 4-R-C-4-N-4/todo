@@ -12,8 +12,12 @@ import {
   getCommitsAhead,
   isAncestor,
   getLastCommitForFile,
+  commitTodoState,
   GitError,
 } from '../src/git.js';
+import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { makeTempDir, removeTempDir, initGitRepo, makeCommit } from './helpers.js';
 
 let tmpDir: string;
@@ -161,5 +165,64 @@ describe('getLastCommitForFile', () => {
 describe('GitError', () => {
   it('is thrown on invalid git commands', () => {
     expect(() => resolveHEAD(makeTempDir())).toThrow(GitError);
+  });
+});
+
+describe('commitTodoState', () => {
+  function writeOpenTicket(dir: string, id: string): void {
+    const p = join(dir, '.todo', 'open', `${id}.json`);
+    writeFileSync(p, JSON.stringify({ id, state: 'open' }), 'utf8');
+  }
+
+  it('stages additions, modifications, and deletions under .todo/ and commits', () => {
+    makeCommit(tmpDir); // base commit so HEAD exists
+    mkdirSync(join(tmpDir, '.todo', 'open'), { recursive: true });
+    mkdirSync(join(tmpDir, '.todo', 'done'), { recursive: true });
+    writeOpenTicket(tmpDir, 'abcd1234');
+    execFileSync('git', ['add', '-A', '.todo'], { cwd: tmpDir });
+    execFileSync('git', ['commit', '-m', 'add ticket'], { cwd: tmpDir });
+
+    // Simulate a close: move open/ -> done/ (a deletion AND an addition).
+    rmSync(join(tmpDir, '.todo', 'open', 'abcd1234.json'));
+    writeFileSync(
+      join(tmpDir, '.todo', 'done', 'abcd1234.json'),
+      JSON.stringify({ id: 'abcd1234', state: 'done' }),
+      'utf8'
+    );
+
+    const before = resolveHEAD(tmpDir);
+    const sha = commitTodoState('todo:abcd1234 — close', tmpDir);
+
+    expect(sha).not.toBe(before); // a new commit was made
+    expect(commitExists(sha, tmpDir)).toBe(true);
+    // Working tree is clean: the move was fully captured.
+    const status = execFileSync('git', ['status', '--porcelain'], { cwd: tmpDir, encoding: 'utf8' });
+    expect(status.trim()).toBe('');
+  });
+
+  it('only commits .todo/, leaving unrelated working-tree changes unstaged', () => {
+    makeCommit(tmpDir);
+    mkdirSync(join(tmpDir, '.todo', 'open'), { recursive: true });
+    writeOpenTicket(tmpDir, 'beef0001');
+    writeFileSync(join(tmpDir, 'src.txt'), 'uncommitted code change', 'utf8');
+
+    commitTodoState('todo:beef0001 — close', tmpDir);
+
+    // The code change is still pending — it was not swept into the state commit.
+    const status = execFileSync('git', ['status', '--porcelain'], { cwd: tmpDir, encoding: 'utf8' });
+    expect(status).toContain('src.txt');
+  });
+
+  it('makes no commit and returns current HEAD when nothing is staged', () => {
+    makeCommit(tmpDir);
+    mkdirSync(join(tmpDir, '.todo', 'open'), { recursive: true });
+    writeOpenTicket(tmpDir, 'cafe0002');
+    execFileSync('git', ['add', '-A', '.todo'], { cwd: tmpDir });
+    execFileSync('git', ['commit', '-m', 'add ticket'], { cwd: tmpDir });
+
+    // .todo/ exists and is fully committed — nothing left to record.
+    const head = resolveHEAD(tmpDir);
+    const result = commitTodoState('todo:cafe0002 — close', tmpDir);
+    expect(result).toBe(head);
   });
 });

@@ -9,6 +9,7 @@ import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
 import {
 	checkoutBranch,
+	commitTodoState,
 	getCurrentBranch,
 	getDefaultBranch,
 	resolveHEAD,
@@ -24,6 +25,10 @@ export function registerClose(program: Command): void {
 		.option("--test <file::func>", "test file and function (colon-separated)")
 		.option("--note <text>", "resolution note")
 		.option("--checkout", "git checkout base_branch after closing")
+		.option(
+			"--commit-state",
+			"atomically git-commit the .todo/ state change (no separate manual commit needed)",
+		)
 		.option("--force", "skip branch and commit-message guards")
 		.action((id: string, opts) => {
 			const ctx = getContext(true);
@@ -102,6 +107,25 @@ export function registerClose(program: Command): void {
 
 				writeTicket(repoRoot, updated);
 				console.log(`Closed ${updated.id}`);
+
+				// Atomically record the state change. This only runs once the
+				// close has already succeeded on disk, so the "close" commit can
+				// never describe a ticket that did not actually close — the
+				// phantom-commit hazard of a manual `git commit` after a failed
+				// close. Runs before --checkout so the commit lands on the ticket
+				// branch before switching away.
+				if (opts.commitState) {
+					const message = `${getCommitPrefix(config)}${updated.id} — close`;
+					try {
+						commitTodoState(message, repoRoot);
+						console.log(`Recorded .todo/ state: ${message}`);
+					} catch (err) {
+						console.error(
+							`Warning: closed ${updated.id} but could not commit .todo/ state: ${(err as Error).message}\n` +
+								"  Commit it manually: git add -A .todo && git commit",
+						);
+					}
+				}
 
 				// Checkout base branch if requested
 				if (opts.checkout) {

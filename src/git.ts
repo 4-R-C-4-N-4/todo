@@ -140,6 +140,27 @@ export function getGitUserName(cwd: string = process.cwd()): string {
 	return exec(["config", "user.name"], cwd);
 }
 
+/**
+ * Stage the .todo/ directory (additions, modifications, AND deletions — a
+ * close moves the file from open/ to done/) and commit it. Used by
+ * `todo close --commit-state` to make close-and-record atomic: the state
+ * file is recorded by the same command that closed the ticket, so a failed
+ * close can never be followed by a stray manual "close" commit that desyncs
+ * committed .todo/ from reality. Returns the resulting HEAD sha. If nothing
+ * is staged (state already committed), no commit is made and current HEAD is
+ * returned — a close that already succeeded on disk must not error out here.
+ */
+export function commitTodoState(
+	message: string,
+	cwd: string = process.cwd(),
+): string {
+	exec(["add", "-A", ".todo"], cwd);
+	const staged = exec(["diff", "--cached", "--name-only", "--", ".todo"], cwd);
+	if (staged.length === 0) return resolveHEAD(cwd);
+	exec(["commit", "-m", message], cwd);
+	return resolveHEAD(cwd);
+}
+
 export function hasUncommittedChanges(cwd: string = process.cwd()): boolean {
 	const out = exec(["status", "--porcelain"], cwd);
 	return out.length > 0;
