@@ -975,6 +975,8 @@ $ todo show a3f8c2e1
 
 **Why not squash merge?** Squash merge creates a new commit with a different SHA and discards the original branch commits. This breaks `resolution.commit` — the ticket would point at an orphaned commit that `git gc` will eventually delete. Since the whole point of the done contract is provable traceability to a specific commit, squash merge undermines the tool's core guarantee. If you need a clean mainline `git log`, use `git log --first-parent` to see only merge commits without branch detail.
 
+**Scope of the rule — `.todo/`-only commits are exempt.** The no-squash rule protects exactly the commits a ticket *points at*: the deliverable/code commits referenced by `resolution.commit`. The `.todo/`-only state commits (`todo:<id> — close`, plan commits) are not referenced by anything — the resolution SHA is stored *inside* the ticket file, independent of how `.todo/` commit history is shaped. They may therefore be squashed or batched freely (e.g. one `.todo/` state commit per PR) without weakening any guarantee. This resolves the tension between "every transition is a commit" and a clean mainline: batch the state churn, preserve the deliverable SHAs.
+
 ---
 
 ## 10. Scope Boundaries
