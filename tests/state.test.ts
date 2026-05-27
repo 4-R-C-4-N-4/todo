@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { validateTransition, applyTransition } from '../src/state.js';
+import { writeTicket } from '../src/ticket.js';
 import { makeTempDir, removeTempDir, initGitRepo, makeCommit, makeTodoDir, makeTicket } from './helpers.js';
 import type { Ticket } from '../src/types.js';
 
@@ -189,6 +190,8 @@ describe('validateTransition - done contract', () => {
   });
 
   it('parent ticket: note required, commit defaults to HEAD', () => {
+    writeTicket(tmpDir, makeTicket({ id: 'child001', state: 'done' }));
+    writeTicket(tmpDir, makeTicket({ id: 'child002', state: 'done' }));
     const t = makeTicket({
       type: 'feature',
       state: 'open',
@@ -200,6 +203,7 @@ describe('validateTransition - done contract', () => {
   });
 
   it('parent ticket: missing note throws', () => {
+    writeTicket(tmpDir, makeTicket({ id: 'child001', state: 'done' }));
     const t = makeTicket({
       type: 'feature',
       state: 'open',
@@ -208,6 +212,64 @@ describe('validateTransition - done contract', () => {
     expect(() =>
       validateTransition(t, 'done', {}, tmpDir)
     ).toThrow(/note/i);
+  });
+
+  it('parent ticket: refuses when at least one child is still open', () => {
+    writeTicket(tmpDir, makeTicket({ id: 'child001', state: 'done' }));
+    writeTicket(tmpDir, makeTicket({ id: 'child002', state: 'open' }));
+    const t = makeTicket({
+      type: 'feature',
+      state: 'open',
+      relationships: { children: ['child001', 'child002'] },
+    });
+    expect(() =>
+      validateTransition(t, 'done', { note: 'premature' }, tmpDir)
+    ).toThrow(/child002.*open/);
+  });
+
+  it('parent ticket: refuses when an active child blocks close', () => {
+    writeTicket(tmpDir, makeTicket({ id: 'child001', state: 'active' }));
+    const t = makeTicket({
+      type: 'feature',
+      state: 'open',
+      relationships: { children: ['child001'] },
+    });
+    expect(() =>
+      validateTransition(t, 'done', { note: 'premature' }, tmpDir)
+    ).toThrow(/active/);
+  });
+
+  it('parent ticket: accepts mix of terminal states (done/wontfix/duplicate)', () => {
+    writeTicket(tmpDir, makeTicket({ id: 'child001', state: 'done' }));
+    writeTicket(tmpDir, makeTicket({ id: 'child002', state: 'wontfix' }));
+    writeTicket(tmpDir, makeTicket({ id: 'child003', state: 'duplicate' }));
+    const t = makeTicket({
+      type: 'feature',
+      state: 'open',
+      relationships: { children: ['child001', 'child002', 'child003'] },
+    });
+    expect(() =>
+      validateTransition(t, 'done', { note: 'all terminal' }, tmpDir)
+    ).not.toThrow();
+  });
+
+  it('parent ticket: throws when a referenced child file is missing', () => {
+    const t = makeTicket({
+      type: 'feature',
+      state: 'open',
+      relationships: { children: ['orphan-id'] },
+    });
+    expect(() =>
+      validateTransition(t, 'done', { note: 'try' }, tmpDir)
+    ).toThrow(/not found/i);
+  });
+
+  it('parent-close child check does NOT fire for single (non-parent) tickets', () => {
+    // A standalone chore ticket should not have children read or validated.
+    const t = makeTicket({ type: 'chore', state: 'open' });
+    expect(() =>
+      validateTransition(t, 'done', { commit: realCommit }, tmpDir)
+    ).not.toThrow();
   });
 });
 

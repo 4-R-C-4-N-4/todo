@@ -2,7 +2,7 @@
 
 import { existsSync } from "node:fs";
 import { commitExists } from "./git.js";
-import { TERMINAL_STATES } from "./ticket.js";
+import { readTicket, TERMINAL_STATES } from "./ticket.js";
 import type { State, Ticket } from "./types.js";
 
 export interface TransitionParams {
@@ -59,6 +59,31 @@ export function validateTransition(
 			if (!params.note) {
 				throw new Error(
 					`Parent ticket requires a resolution note when closing as done`,
+				);
+			}
+			// Every child must be in a terminal state. Belt-and-suspenders to
+			// the branch-guard check in close.ts — that one only fires when
+			// the commit-prefix needle is missing on the branch.
+			const openChildren: string[] = [];
+			const missingChildren: string[] = [];
+			for (const childId of ticket.relationships?.children ?? []) {
+				try {
+					const child = readTicket(repoRoot, childId);
+					if (!TERMINAL_STATES.includes(child.state)) {
+						openChildren.push(`${childId} (${child.state})`);
+					}
+				} catch {
+					missingChildren.push(childId);
+				}
+			}
+			if (missingChildren.length > 0) {
+				throw new Error(
+					`Cannot close parent ${ticket.id}: child ticket(s) not found in .todo/: ${missingChildren.join(", ")}`,
+				);
+			}
+			if (openChildren.length > 0) {
+				throw new Error(
+					`Cannot close parent ${ticket.id}: ${openChildren.length} child ticket(s) still open: ${openChildren.join(", ")}. Close them first.`,
 				);
 			}
 			// commit is optional for parent (defaults to HEAD — caller handles HEAD resolution)
