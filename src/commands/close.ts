@@ -4,7 +4,7 @@ import {
 	checkOnExpectedBranch,
 	isParentWithAllChildrenClosed,
 } from "../branch-guard.js";
-import { getBranchMode, getCommitPrefix } from "../config.js";
+import { getBranchMode, getCommitPrefix, getGuardMode } from "../config.js";
 import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
 import {
@@ -37,10 +37,25 @@ export function registerClose(program: Command): void {
 			try {
 				const ticket = readTicketByPrefix(repoRoot, id);
 				const managed = getBranchMode(config) === "managed";
+				const strict = getGuardMode(config) === "strict";
 
 				// Branch-convention guards. Skipped entirely in managed mode (the
-				// user owns branching) or with --force.
+				// user owns branching) or with --force. Otherwise they are advisory
+				// by default — warn and proceed — and only hard-fail when the
+				// project opts into behavior.guard_mode = "strict". This keeps the
+				// tool from litigating a workflow you are not using, while still
+				// letting agent-driven repos enforce the conventions.
 				if (!opts.force && !managed) {
+					// Report a guard failure at the configured severity. In strict
+					// mode it exits 1; otherwise it warns and execution continues.
+					const reportGuard = (message: string) => {
+						if (strict) {
+							console.error(`Error: ${message}`);
+							process.exit(1);
+						}
+						console.error(`Warning: ${message} (advisory — proceeding)`);
+					};
+
 					let currentBranch = "";
 					try {
 						currentBranch = getCurrentBranch(repoRoot);
@@ -48,29 +63,22 @@ export function registerClose(program: Command): void {
 						// Detached HEAD or other; treat as a branch mismatch.
 					}
 					const branchCheck = checkOnExpectedBranch(ticket, currentBranch);
-					if (!branchCheck.ok) {
-						console.error(`Error: ${branchCheck.message}`);
-						process.exit(1);
-					}
-					// Commit-prefix grep is advisory, not a gate: it is a heuristic
-					// over commit messages, whereas the real done-contract
-					// (commit-exists + test/note) is enforced in state.ts. An
-					// explicit --commit names the deliverable, so skip the grep;
-					// a parent with all children closed carries no commit of its
-					// own. Otherwise warn on a miss but proceed.
-					if (
-						!opts.commit &&
-						!isParentWithAllChildrenClosed(ticket, repoRoot)
-					) {
+					if (!branchCheck.ok) reportGuard(branchCheck.message ?? "");
+
+					// The commit-prefix grep is a heuristic over commit messages, not
+					// the real done-contract (commit-exists + test/note, enforced in
+					// state.ts). An explicit --commit names the deliverable, so skip
+					// it; a parent with all children closed carries no commit of its
+					// own.
+					if (!opts.commit && !isParentWithAllChildrenClosed(ticket, repoRoot)) {
 						const commitCheck = checkBranchHasTodoCommit(
 							ticket,
 							repoRoot,
 							getCommitPrefix(config),
 						);
 						if (!commitCheck.ok) {
-							console.error(
-								`Warning: ${commitCheck.message}\n` +
-									"  Proceeding anyway (advisory). Pass --commit <sha> to point close at the deliverable.",
+							reportGuard(
+								`${commitCheck.message} Pass --commit <sha> to point close at the deliverable`,
 							);
 						}
 					}
