@@ -118,7 +118,9 @@ git branch -d todo/<id>
 git push
 ```
 
-**Use `--no-ff`, never squash.** Squash replaces commit SHAs — the resolution commit stored in the ticket points at an orphaned commit that `git gc` will eventually delete. The same rule applies on the GitHub side: in branch protection, enable "Require linear history" so squash merges aren't even an option.
+**Use `--no-ff` for the deliverable, never squash it.** Squash replaces commit SHAs — and a ticket's `resolution.commit` points at a real code commit, so squashing the deliverable orphans that reference (`git gc` eventually deletes it). The same rule applies on the GitHub side: enable "Require linear history" in branch protection.
+
+This rule covers only the commits a ticket *points at*. The `.todo/`-only state commits (`todo:<id> — close`, plan commits) carry no resolution reference — the SHA lives inside the ticket file, not in `.todo/` history — so they're safe to squash or batch (e.g. one `.todo/` commit per PR) if mainline `todo:` noise bothers you.
 
 ## Done Contract Quick Reference
 
@@ -159,8 +161,8 @@ todo pr
 ## Common Mistakes
 
 1. **Closing before committing** — `todo close` captures HEAD. Commit the fix first, always.
-2. **Forgetting `git add .todo/`** — Ticket state lives in `.todo/`. Commit it after every close.
-3. **Squash merging** — Breaks resolution commit references. Use `--no-ff`.
+2. **Forgetting `git add .todo/`** — Ticket state lives in `.todo/`. Use `todo close --commit-state` to record it atomically and skip this step.
+3. **Squash merging the deliverable** — Breaks resolution commit references. Use `--no-ff` for code commits. (`.todo/`-only state commits are safe to squash/batch — nothing references them.)
 
 ---
 

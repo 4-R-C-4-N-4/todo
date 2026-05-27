@@ -148,7 +148,7 @@ For `main`, enable:
 
 - **Require a pull request before merging** — the agent stops at the PR; you click Merge.
 - **Require status checks to pass** — your CI's `Lint, typecheck, test` job. Catches the kind of regression that this session's commit `b6709ed` (missing `pretest` hook) would have stopped on red.
-- **Require linear history** — enforces the skill's `--no-ff` rule. Squash merges would orphan the resolution-commit SHAs stored in `.todo/done/<id>.json`.
+- **Require linear history** — enforces the skill's `--no-ff` rule for *deliverable* commits, keeping the resolution-commit SHAs stored in `.todo/done/<id>.json` resolvable. (The `.todo/`-only state commits carry no such reference and are safe to squash or batch.)
 - **Require approvals (optional)** — even for a solo repo, setting "1 approval" forces you to actually open the PR and skim the diff before clicking through. Cheap insurance against autopilot merges.
 
 Once protected, the closing step becomes `todo pr` (push branch + open PR + stop) instead of a local merge. The local-merge sequence in the previous sections remains valid for unprotected repos or quick solo work.
@@ -203,9 +203,9 @@ The `<id>` is the full 8-char ticket ID. Always include it. This ties commits to
 
 1. **Closing before committing** — `todo close` captures HEAD. If you haven't committed the fix, the resolution commit is wrong. Always commit code first.
 
-2. **Forgetting `git add .todo/`** — Ticket files live in `.todo/`. They must be committed. After any `todo` command that writes, stage `.todo/`.
+2. **Forgetting `git add .todo/`** — Ticket files live in `.todo/`. They must be committed. After any `todo` command that writes, stage `.todo/`. (`todo close --commit-state` does this for you atomically — see Workflow — which is the recommended way to avoid this footgun entirely.)
 
-3. **Squash merging breaks commit refs** — Tickets store resolution commits. Squash merging replaces them with a new SHA. The linked commit disappears. Use `--no-ff` merges or update the resolution commit after squash.
+3. **Squash merging can break commit refs** — A ticket's `resolution.commit` points at a real *code* commit. Squash-merging that commit replaces its SHA and orphans the reference, so never squash the deliverable commits — use `--no-ff` (or update the resolution commit after a squash). This does **not** apply to the `.todo/`-only state commits (`todo:<id> — close`, plan commits): nothing points at them — the resolution SHA lives *inside* the ticket file, not in `.todo/` history — so they may be squashed or batched (e.g. one `.todo/` commit per PR) to keep mainline history clean.
 
 4. **Using a short prefix when IDs are ambiguous** — If two tickets share a prefix, commands fail. Use more characters of the ID.
 
