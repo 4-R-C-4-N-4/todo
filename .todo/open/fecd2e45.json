@@ -1,0 +1,11 @@
+{
+  "id": "fecd2e45",
+  "type": "bug",
+  "state": "open",
+  "summary": "transition --depends-on is parsed but never persisted: applyTransition drops it, validateTransition and work never read it",
+  "source": {
+    "type": "agent"
+  },
+  "created_at": "2026-08-12T13:59:54.075Z",
+  "updated_at": "2026-08-12T13:59:54.075Z"
+}
