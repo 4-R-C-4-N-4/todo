@@ -1,9 +1,11 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { Command } from "commander";
 import { getContext } from "../context.js";
 import { handleError } from "../errors.js";
 import { branchExists, commitExists, isAncestor, resolveHEAD } from "../git.js";
 import { listTickets, TERMINAL_STATES } from "../ticket.js";
-import type { Ticket } from "../types.js";
+import type { SourceType, State, Ticket, TicketType } from "../types.js";
 
 type Severity = "error" | "warning";
 
@@ -11,6 +13,111 @@ interface Issue {
 	severity: Severity;
 	ticket: string;
 	message: string;
+}
+
+// Valid enum values, kept in sync with src/types.ts. Used to validate the raw
+// files on disk — a hand-authored ticket that violates these never reaches the
+// git-drift checks, because listTickets() casts `JSON.parse(...) as Ticket` and
+// silently skips anything it cannot parse.
+const TICKET_TYPES: TicketType[] = [
+	"bug",
+	"feature",
+	"refactor",
+	"chore",
+	"debt",
+	"investigation",
+];
+const TICKET_STATES: State[] = [
+	"open",
+	"active",
+	"blocked",
+	"done",
+	"wontfix",
+	"duplicate",
+];
+const SOURCE_TYPES: SourceType[] = ["log", "test", "agent", "human", "comment"];
+
+/**
+ * Store-integrity pass: validate the raw ticket files before the git-drift
+ * checks run. `listTickets()` skips files it cannot parse, so a hand-authored
+ * ticket with a JSON syntax error, a missing required field, a bad enum, a
+ * filename that disagrees with its id, or a duplicated id would otherwise pass
+ * unnoticed. This is the half of `doctor` that catches editing the JSON by hand
+ * instead of going through the CLI.
+ */
+export function validateStoreFiles(repoRoot: string): Issue[] {
+	const issues: Issue[] = [];
+	const seen = new Map<string, string>(); // id -> "dir/file.json"
+
+	for (const dir of ["open", "done"] as const) {
+		const directory = join(repoRoot, ".todo", dir);
+		let files: string[];
+		try {
+			files = readdirSync(directory).filter((f) => f.endsWith(".json"));
+		} catch {
+			continue; // directory absent — nothing to validate
+		}
+
+		for (const file of files) {
+			const name = file.slice(0, -5); // basename without ".json"
+			const where = `${dir}/${file}`;
+
+			let parsed: unknown;
+			try {
+				parsed = JSON.parse(readFileSync(join(directory, file), "utf8"));
+			} catch {
+				issues.push({
+					severity: "error",
+					ticket: name,
+					message: `${where} is not valid JSON — corrupt or hand-edited; use the todo CLI`,
+				});
+				continue;
+			}
+
+			if (typeof parsed !== "object" || parsed === null) {
+				issues.push({
+					severity: "error",
+					ticket: name,
+					message: `${where} is not a ticket object`,
+				});
+				continue;
+			}
+
+			const t = parsed as Record<string, unknown>;
+			const id = typeof t.id === "string" ? t.id : name;
+			const bad = (message: string) =>
+				issues.push({ severity: "error", ticket: id, message });
+
+			if (typeof t.id !== "string" || t.id.length === 0)
+				bad(`${where} has no valid 'id'`);
+			if (typeof t.summary !== "string" || t.summary.length === 0)
+				bad(`${where} has no 'summary'`);
+			if (typeof t.created_at !== "string") bad(`${where} has no 'created_at'`);
+			if (typeof t.updated_at !== "string") bad(`${where} has no 'updated_at'`);
+
+			if (!TICKET_TYPES.includes(t.type as TicketType))
+				bad(`${where} has invalid type '${String(t.type)}'`);
+			if (!TICKET_STATES.includes(t.state as State))
+				bad(`${where} has invalid state '${String(t.state)}'`);
+			const src = t.source as { type?: unknown } | undefined;
+			if (!src || !SOURCE_TYPES.includes(src.type as SourceType))
+				bad(`${where} has invalid or missing 'source.type'`);
+
+			// The CLI always names a file <id>.json; a mismatch means it was
+			// renamed or authored by hand.
+			if (typeof t.id === "string" && t.id !== name)
+				bad(`${where} filename does not match ticket id '${t.id}'`);
+
+			if (typeof t.id === "string") {
+				const prior = seen.get(t.id);
+				if (prior)
+					bad(`duplicate ticket id '${t.id}' — in both ${prior} and ${where}`);
+				else seen.set(t.id, where);
+			}
+		}
+	}
+
+	return issues;
 }
 
 /**
@@ -21,7 +128,7 @@ interface Issue {
  * the wrong directory for its state). `doctor` turns that into a report.
  */
 export function collectIssues(repoRoot: string): Issue[] {
-	const issues: Issue[] = [];
+	const issues: Issue[] = validateStoreFiles(repoRoot);
 	const add = (severity: Severity, ticket: string, message: string) =>
 		issues.push({ severity, ticket, message });
 
